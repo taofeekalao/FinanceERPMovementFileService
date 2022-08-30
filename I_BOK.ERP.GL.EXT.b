@@ -1,0 +1,35 @@
+    COM/BOK.ERP.GL.EXT/BOK.ERP.GL.EXT.START,
+
+    FN.CAL,
+    F.CAL,
+
+    FN.CPL,
+    F.CPL,
+
+    FN.ERP.GL.TAB,
+    F.ERP.GL.TAB,
+
+    FN.BOK.PARAM,
+    F.BOK.PARAM,
+
+    FN.STAT.REP.LINE,
+    F.STAT.REP.LINE,
+
+    FN.ERP.GL.PARAM,
+    F.ERP.GL.PARAM,
+
+    MISSING.CPL.LIST,
+    MISSING.CAL.LIST,
+
+    RECID.CPL,
+    RECID.CAL,
+
+    options,
+    FUNCT,
+
+    APP.NAME,
+
+    OFSVERSION,
+    NO.OF.AUTH,
+
+    BOK.ERP.GL.EXT.END

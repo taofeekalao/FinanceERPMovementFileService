@@ -1,0 +1,347 @@
+*******************************************************************
+*   Meraki Systems
+*   August 17, 2022
+*   This Is To Genreate T24 GL Movements Flat File For Third Party.
+*
+*******************************************************************
+    SUBROUTINE BOK.ERP.GL.EXT(WORK.ID)
+
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    $INSERT I_F.CONSOLIDATE.ASST.LIAB
+    $INSERT I_F.CONSOLIDATE.PRFT.LOSS
+    $INSERT I_F.DATES
+    $INSERT I_F.CURRENCY
+    $INSERT I_F.BOK.ERP.GL.PARAMETER
+    $INSERT I_F.BOK.GEN.PARAMETER
+    $INSERT I_F.RE.STAT.REP.LINE
+    $INSERT I_F.ERP.GL
+    $INSERT I_BATCH.FILES
+    $INSERT I_BOK.ERP.GL.EXT
+
+    PREV.ID = ""
+    RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
+    FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
+    LPERIOD = RE.DATE[5,2]
+
+    OFS.RECORD = ""
+    requestCommitted = ""
+    theResponse = ""
+    txnCommitted = ""
+
+    BATCH.NAME = "BKGL" : RE.DATE[2] : RE.DATE[5,2] : RE.DATE[1,4]
+
+    RSLC.ID = WORK.ID['*',1,1]
+    RE.KEY = WORK.ID['*',2,1]
+
+    IF RE.KEY[1,2] EQ "RE" THEN
+        RETURN
+    END
+
+    RE.TYPE = WORK.ID['*',3,1]
+    LINE.ID = FIELD(RSLC.ID, ".", 1, 2)
+
+    IF PREV.ID NE LINE.ID THEN
+        READ R.LINE FROM F.STAT.REP.LINE, LINE.ID ELSE R.LINE = ""
+        PREV.ID = LINE.ID
+    END
+    LINE.DESC = R.LINE<RE.SRL.DESC,2,1>
+    LINE.TYPE = R.LINE<RE.SRL.TYPE>
+
+    *   PROCESS.RSLC
+    *****************
+    CO.CODE = FIELD(RSLC.ID, ".", 3, 1)
+
+    IF (RE.KEY[1,2] <> 'PL') THEN
+        GOSUB PROCESS.CAL
+    END ELSE
+        RE.CCY = RE.TYPE
+        GOSUB PROCESS.CPL
+    END
+
+    IF MISSING.CPL.LIST OR MISSING.CAL.LIST THEN
+        R.DATA = ''
+        R.DATA  = MISSING.CAL.LIST
+        R.DATA<-1> = MISSING.CPL.LIST
+      *  WRITE R.DATA TO FV.LOG.OUT.PATH, LOG.FILE.NAME
+        RETURN
+    END
+
+
+    IF (RE.KEY[1,2] <> 'PL') THEN
+        R.DATA = RAISE(CAL.GRP.REC)
+    END ELSE
+        R.DATA = RAISE(CPL.GRP.REC)
+    END
+    GOSUB WRITE.DATA
+
+!   ---------------------------------------------------------------------
+    IF (DFF.DATA<2> + DFF.DATA<3>) NE 0 THEN
+        DIFF.ID = DFF.DATA<1>
+        CCY.BALANCE = DFF.DATA<2> * (-1)
+        LCY.BALANCE = DFF.DATA<3> * (-1)
+        GOSUB PROCESS.DFF
+    END
+
+    RETURN
+
+
+PROCESS.CAL:
+************
+    READ R.CAL FROM F.CAL, RE.KEY ELSE R.CAL = ''
+    LOCATE RE.TYPE IN R.CAL<RE.ASL.TYPE,1> SETTING APS ELSE
+        RETURN
+    END
+
+    LCY.DB.MVMT = 0
+    CCY.DB.MVMT = 0
+
+    LCY.CR.MVMT = 0
+    CCY.CR.MVMT = 0
+
+    IF R.CAL<RE.ASL.DATE.LAST.UPDATE> EQ RE.DATE THEN
+        IF RE.CCY EQ LCCY THEN
+            LCY.DB.MVMT += R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
+            LCY.CR.MVMT += R.CAL<RE.ASL.CREDIT.MOVEMENT, APS>
+        END ELSE
+            LCY.DB.MVMT += R.CAL<RE.ASL.LOCAL.DEBIT.MVE, APS>
+            LCY.CR.MVMT += R.CAL<RE.ASL.LOCAL.CREDT.MVE, APS>
+        END
+        CCY.DB.MVMT += R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
+        CCY.CR.MVMT += R.CAL<RE.ASL.CREDIT.MOVEMENT, APS>
+    END
+
+    IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
+        IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
+            RETURN
+        END
+    END
+
+    R.DATA = ""
+    R.DATA<EXT.STATUS.CODE> = LINE.DESC          ;*R.RSLC<RE.SLC.DESC,2,1>
+    R.DATA<EXT.CURRENCY> = RE.CCY
+    R.DATA<EXT.COMPANY> = "1200"
+
+    COMP.CODE = CO.CODE
+    GOSUB GET.ERP.CODE
+    R.DATA<EXT.BRANCH> = ERP.CODE
+    R.DATA<EXT.ACCOUNT> = LINE.DESC             ;*R.RSLC<RE.SLC.DESC,2,1>
+
+    R.DATA<EXT.SECTOR.ACTV> = FIELD(RE.KEY, ".", 6, 1)
+    R.DATA<EXT.INST.SECTOR> = FIELD(RE.KEY, ".", 11, 1)
+    R.DATA<EXT.COST.CENTER> = "2105"
+
+    CAL.GRP.REC = LOWER(R.DATA)
+*   ---------------------------------------------------------------------
+    CAL.GRP.REC<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
+    CAL.GRP.REC<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
+
+    CAL.GRP.REC<EXT.CCY.CR.AMT> += CCY.CR.MVMT
+    CAL.GRP.REC<EXT.LCY.CR.AMT> += LCY.CR.MVMT
+*   ---------------------------------------------------------------------
+    DIFF.ID = CO.CODE : "-" : RE.CCY
+    DFF.DATA<1> = DIFF.ID
+    DFF.DATA<2> = 0
+    DFF.DATA<3> = 0
+
+    DFF.DATA<2> += (CCY.DB.MVMT + CCY.CR.MVMT)
+    DFF.DATA<3> += (LCY.DB.MVMT + LCY.CR.MVMT)
+!   ---------------------------------------------------------------------
+    LINE.ACCT = ""
+    LINE.ACCT = R.DATA<EXT.ACCOUNT>
+    SUMM.ID = LINE.ID : "," : ERP.CODE : "," : LINE.ACCT :"," : RE.KEY : "-" : RE.TYPE
+
+    SUM.LIST = SUMM.ID
+    SUM.DATA = SUMM.ID
+
+
+    SUM.DATA<2> += CCY.DB.MVMT
+    SUM.DATA<3> += CCY.CR.MVMT
+    SUM.DATA<4> += LCY.DB.MVMT
+    SUM.DATA<5> += LCY.CR.MVMT
+
+    RETURN
+
+PROCESS.CPL:
+************
+    READ R.CPL FROM F.CPL, RE.KEY ELSE R.CPL = ''
+    LOCATE RE.CCY IN R.CPL<RE.PTL.CURRENCY,1> SETTING CPS ELSE
+        RETURN
+    END
+
+    LCY.DB.MVMT = 0
+    CCY.DB.MVMT = 0
+
+    LCY.CR.MVMT = 0
+    CCY.CR.MVMT = 0
+
+    IF R.CPL<RE.PTL.DATE.LAST.UPDATE> EQ RE.DATE THEN
+        LCY.DB.MVMT += R.CPL<RE.PTL.DEBIT.MOVEMENT, CPS>
+        LCY.CR.MVMT += R.CPL<RE.PTL.CREDIT.MOVEMENT, CPS>
+
+        IF RE.CCY EQ LCCY THEN
+            CCY.DB.MVMT = LCY.DB.MVMT
+            CCY.CR.MVMT = LCY.CR.MVMT
+        END ELSE
+
+            CCY.DB.MVMT += R.CPL<RE.PTL.CCY.DEBIT.MVE, CPS>
+            CCY.CR.MVMT += R.CPL<RE.PTL.CCY.CREDT.MVE, CPS>
+        END
+    END
+
+    IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
+        IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
+            RETURN
+        END
+    END
+
+    R.DATA = ""
+    R.DATA<EXT.STATUS.CODE> = LINE.DESC ;*R.RSLC<RE.SLC.DESC,2,1>
+    R.DATA<EXT.CURRENCY> = RE.CCY
+    R.DATA<EXT.COMPANY> = "1200"
+
+    COMP.CODE = CO.CODE
+    GOSUB GET.ERP.CODE
+    R.DATA<EXT.BRANCH> = ERP.CODE
+
+    R.DATA<EXT.ACCOUNT> = LINE.DESC     ;*R.RSLC<RE.SLC.DESC,2,1>
+    R.DATA<EXT.SECTOR.ACTV> = FIELD(RE.KEY, ".", 4, 1)
+    R.DATA<EXT.COST.CENTER> = "2105"
+
+    CPL.GRP.REC = LOWER(R.DATA)
+
+    CPL.GRP.REC<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
+    CPL.GRP.REC<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
+
+    CPL.GRP.REC<EXT.CCY.CR.AMT> += CCY.CR.MVMT
+    CPL.GRP.REC<EXT.LCY.CR.AMT> += LCY.CR.MVMT
+!   
+    DIFF.ID = CO.CODE : "-" : RE.CCY
+    DFF.DATA<1> = DIFF.ID
+    DFF.DATA<2> = 0
+    DFF.DATA<3> = 0
+
+    DFF.DATA<2> += (CCY.DB.MVMT + CCY.CR.MVMT)
+    DFF.DATA<3> += (LCY.DB.MVMT + LCY.CR.MVMT)
+
+    LINE.ACCT = ""
+    LINE.ACCT = R.DATA<EXT.ACCOUNT>
+
+    SUMM.ID = LINE.ID : "," : ERP.CODE : "," : LINE.ACCT :"," : RE.KEY : "-" : RE.TYPE
+
+    SUM.LIST = SUMM.ID
+    SUM.DATA = SUMM.ID
+
+
+    SUM.DATA<2> += CCY.DB.MVMT
+    SUM.DATA<3> += CCY.CR.MVMT
+    SUM.DATA<4> += LCY.DB.MVMT
+    SUM.DATA<5> += LCY.CR.MVMT
+
+    RETURN
+
+PROCESS.DFF:
+************
+    CO.CODE = FIELD(DIFF.ID, "-", 1, 1)
+    RE.CCY = FIELD(DIFF.ID, "-", 2, 1)
+
+    R.DATA = ""
+
+    R.DATA<EXT.CURRENCY> = RE.CCY
+    R.DATA<EXT.COMPANY> = "1200"
+
+    COMP.CODE = CO.CODE
+    GOSUB GET.ERP.CODE
+    R.DATA<EXT.BRANCH> = ERP.CODE
+
+    R.DATA<EXT.ACCOUNT> = "23227000"
+    R.DATA<EXT.COST.CENTER> = "2105"
+
+    IF LCY.BALANCE LT 0 THEN
+        R.DATA<EXT.CCY.DR.AMT> += CCY.BALANCE * (-1)
+        R.DATA<EXT.LCY.DR.AMT> += LCY.BALANCE * (-1)
+    END ELSE
+        R.DATA<EXT.CCY.CR.AMT> += CCY.BALANCE
+        R.DATA<EXT.LCY.CR.AMT> += LCY.BALANCE
+    END
+
+    GOSUB WRITE.DATA
+
+    RETURN
+
+WRITE.DATA:
+***********
+    R.DATA<EXT.STATUS.CODE> = "NEW"
+    R.DATA<EXT.LEDGER.ID> = "300000001807221"
+    R.DATA<EXT.EFF.DATE> = FM.DATE
+    R.DATA<EXT.SOURCE> = "T24"
+    R.DATA<EXT.CATEGORY> = "GL Daily Import"
+    R.DATA<EXT.BOOK.DATE> = FM.DATE
+    R.DATA<EXT.ACTUAL.FLAG> = "A"
+
+    BEGIN CASE
+        CASE NOT(R.DATA<EXT.ACCOUNT>)
+            R.DATA<EXT.ACCOUNT> = "DEFAULTED-56211400"
+        CASE R.DATA<EXT.ACCOUNT> EQ '41110000'
+            R.DATA<EXT.ACCOUNT> = "41111000"
+    END CASE
+
+    R.DATA<EXT.LOB> = "0000"
+    R.DATA<EXT.INTR.COMPANY> = "0000"
+
+    SEC.CODE = R.DATA<EXT.SECTOR.ACTV>
+
+    R.DATA<EXT.SECTOR.ACTV> = "0000"
+    R.DATA<EXT.INST.SECTOR> = "0000"
+
+    R.DATA<EXT.FUTURE.1> = "0000"
+    R.DATA<EXT.FUTURE.2> = "0000"
+
+    R.DATA<EXT.EXCH.USER> = "User"
+    R.DATA<EXT.EXCH.RATE.DATE> = R.DATA<EXT.EFF.DATE>
+    R.DATA<EXT.EXCH.RATE> = 1
+
+    IF R.DATA<EXT.CURRENCY> NE LCCY THEN
+        REP.DATE = RE.DATE
+        CCY.ID = R.DATA<EXT.CURRENCY>
+        RET.CODE = ""
+        R.CCY = ""
+
+        CALL GET.CCY.HISTORY(REP.DATE, CCY.ID, R.CCY, RET.CODE)
+        R.DATA<EXT.EXCH.RATE> = R.CCY<EB.CUR.MID.REVAL.RATE, 1>
+    END
+
+    R.DATA<EXT.JRNL.BATCH.NAME> = BATCH.NAME
+    R.DATA<EXT.INTRFCE.GRP.ID> = RE.DATE
+
+    R.DATA<EXT.LCY.DR.AMT> = ''
+    R.DATA<EXT.LCY.CR.AMT> = ''
+
+    R.DATA<EXT.CCY.DR.AMT> = R.DATA<EXT.CCY.DR.AMT> + 0
+    R.DATA<EXT.CCY.CR.AMT> = R.DATA<EXT.CCY.CR.AMT> + 0
+
+    IF NOT(R.DATA<EXT.CCY.DR.AMT>) THEN
+        R.DATA<EXT.CCY.DR.AMT> = ''
+    END
+
+    IF NOT(R.DATA<EXT.CCY.CR.AMT>) THEN
+        R.DATA<EXT.CCY.CR.AMT> = ''
+    END
+
+    CALL OFS.BUILD.RECORD(APP.NAME, FUNCT, "PROCESS", OFSVERSION, "", NO.OF.AUTH, RE.KEY, R.DATA, OFS.RECORD)
+    CALL OFS.CALL.BULK.MANAGER(options, OFS.RECORD, theResponse, txnCommitted)
+
+    RETURN
+
+GET.ERP.CODE:
+*************
+    CALL F.READ(FN.BOK.PARAM, 'ERP.GL.COMP.CODE', ERP.PARAM.REC, F.BOK.PARAM, ERP.PARAM.ERR)
+    ERP.CODE = ''
+
+    FIND COMP.CODE IN ERP.PARAM.REC<BOK.GEN.PAR.VARIABLE.NAME> SETTING V.FLD, V.VAL, V.SUB.VAL ELSE
+        ERP.CODE = CO.CODE
+    END
+    ERP.CODE = ERP.PARAM.REC<BOK.GEN.PAR.VARIABLE.VALUE, V.VAL>
+
+    RETURN
+END
