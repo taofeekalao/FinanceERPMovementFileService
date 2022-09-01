@@ -4,6 +4,7 @@
 *   This Is To Genreate T24 GL Movements Flat File For Third Party.
 *
 *******************************************************************
+    $PACKAGE BOK.ERP.GL.EXT
     SUBROUTINE BOK.ERP.GL.EXT(WORK.ID)
 
     $INSERT I_COMMON
@@ -19,10 +20,12 @@
     $INSERT I_BATCH.FILES
     $INSERT I_BOK.ERP.GL.EXT
 
+    *DEBUG
     PREV.ID = ""
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
     LPERIOD = RE.DATE[5,2]
+    NEW.KEY.FLAG = 0
 
     OFS.RECORD = ""
     requestCommitted = ""
@@ -59,6 +62,10 @@
         GOSUB PROCESS.CPL
     END
 
+    IF NEW.KEY.FLAG EQ 1 THEN
+        RETURN
+    END
+
     IF MISSING.CPL.LIST OR MISSING.CAL.LIST THEN
         R.DATA = ''
         R.DATA  = MISSING.CAL.LIST
@@ -77,7 +84,6 @@
 
 !   ---------------------------------------------------------------------
     IF (DFF.DATA<2> + DFF.DATA<3>) NE 0 THEN
-        DIFF.ID = DFF.DATA<1>
         CCY.BALANCE = DFF.DATA<2> * (-1)
         LCY.BALANCE = DFF.DATA<3> * (-1)
         GOSUB PROCESS.DFF
@@ -113,9 +119,11 @@ PROCESS.CAL:
 
     IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
         IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
+            NEW.KEY.FLAG = 1
             RETURN
         END
     END
+    DEBUG
 
     R.DATA = ""
     R.DATA<EXT.STATUS.CODE> = LINE.DESC          ;*R.RSLC<RE.SLC.DESC,2,1>
@@ -147,14 +155,21 @@ PROCESS.CAL:
         CAL.GRP.REC<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         CAL.GRP.REC<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
-*   ---------------------------------------------------------------------
+    *   ---------------------------------------------------------------------
+    *   Processing Difference For Current CAL Key
+    *********************************************
     DIFF.ID = CO.CODE : "-" : RE.CCY
-    DFF.DATA<1> = DIFF.ID
-    DFF.DATA<2> = 0
-    DFF.DATA<3> = 0
-
-    DFF.DATA<2> += (CCY.DB.MVMT + CCY.CR.MVMT)
-    DFF.DATA<3> += (LCY.DB.MVMT + LCY.CR.MVMT)
+    CALL F.READ(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
+    IF (R.ERP.GL.REC) THEN
+        DFF.DATA<1> = DIFF.ID
+        DFF.DATA<2> = (R.ERP.GL.REC<EXT.CCY.DR.AMT> + R.ERP.GL.REC<EXT.CCY.CR.AMT>) + (CCY.DB.MVMT + CCY.CR.MVMT)
+        DFF.DATA<3> = (R.ERP.GL.REC<EXT.LCY.DR.AMT> + R.ERP.GL.REC<EXT.LCY.CR.AMT>) + (LCY.DB.MVMT + LCY.CR.MVMT)
+    END ELSE
+        DFF.DATA<1> = DIFF.ID
+        DFF.DATA<2> = 0
+        DFF.DATA<3> = 0
+    END
+    *   End Difference Processing
 !   ---------------------------------------------------------------------
     LINE.ACCT = ""
     LINE.ACCT = R.DATA<EXT.ACCOUNT>
@@ -200,9 +215,11 @@ PROCESS.CPL:
 
     IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
         IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
+            NEW.KEY.FLAG = 1
             RETURN
         END
     END
+    DEBUG
 
     R.DATA = ""
     R.DATA<EXT.STATUS.CODE> = LINE.DESC ;*R.RSLC<RE.SLC.DESC,2,1>
@@ -234,14 +251,19 @@ PROCESS.CPL:
         CAL.GRP.REC<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
 *   ------
-!   
+    *   Processing Difference For Current CAL Key
+    *********************************************
     DIFF.ID = CO.CODE : "-" : RE.CCY
-    DFF.DATA<1> = DIFF.ID
-    DFF.DATA<2> = 0
-    DFF.DATA<3> = 0
-
-    DFF.DATA<2> += (CCY.DB.MVMT + CCY.CR.MVMT)
-    DFF.DATA<3> += (LCY.DB.MVMT + LCY.CR.MVMT)
+    CALL F.READ(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
+    IF (R.ERP.GL.REC) THEN
+        DFF.DATA<1> = DIFF.ID
+        DFF.DATA<2> = (R.ERP.GL.REC<EXT.CCY.DR.AMT> + R.ERP.GL.REC<EXT.CCY.CR.AMT>) + (CCY.DB.MVMT + CCY.CR.MVMT)
+        DFF.DATA<3> = (R.ERP.GL.REC<EXT.LCY.DR.AMT> + R.ERP.GL.REC<EXT.LCY.CR.AMT>) + (LCY.DB.MVMT + LCY.CR.MVMT)
+    END ELSE
+        DFF.DATA<1> = DIFF.ID
+        DFF.DATA<2> = 0
+        DFF.DATA<3> = 0
+    END
 
     LINE.ACCT = ""
     LINE.ACCT = R.DATA<EXT.ACCOUNT>
@@ -284,6 +306,7 @@ PROCESS.DFF:
         R.DATA<EXT.LCY.CR.AMT> += LCY.BALANCE
     END
 
+    GRP.ID = DIFF.ID
     GOSUB WRITE.DATA
 
     RETURN

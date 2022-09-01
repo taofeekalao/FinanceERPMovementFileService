@@ -1,0 +1,18 @@
+component BOK.ERP.GL.EXT
+
+
+public method glErpExtract(
+	INOUT WORK.ID string)
+{
+	jBC:BOK.ERP.GL.EXT
+}
+
+public method glErpExtractLoad()
+{
+	jBC: BOK.ERP.GL.EXT.LOAD
+}
+
+public method glErpExtractSelect()
+{
+	jBC: BOK.ERP.GL.EXT.SELECT
+}

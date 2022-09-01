@@ -4,6 +4,7 @@
 *   This Is To Genreate T24 GL Movements Flat File For Third Party.
 *
 *******************************************************************
+    $PACKAGE BOK.ERP.GL.EXT
     SUBROUTINE BOK.ERP.GL.EXT.SELECT
 
     $INSERT I_COMMON
