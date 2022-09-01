@@ -36,12 +36,12 @@
 
     RSLC.ID = WORK.ID['*',1,1]
     RE.KEY = WORK.ID['*',2,1]
+    RE.TYPE = WORK.ID['*',3,1]
 
     IF RE.KEY[1,2] EQ "RE" THEN
         RETURN
     END
 
-    RE.TYPE = WORK.ID['*',3,1]
     LINE.ID = FIELD(RSLC.ID, ".", 1, 2)
 
     IF PREV.ID NE LINE.ID THEN
@@ -56,6 +56,7 @@
     CO.CODE = FIELD(RSLC.ID, ".", 3, 1)
 
     IF (RE.KEY[1,2] <> 'PL') THEN
+        RE.CCY = FIELD(RE.KEY, ".", 4, 1)
         GOSUB PROCESS.CAL
     END ELSE
         RE.CCY = RE.TYPE
@@ -73,14 +74,6 @@
       *  WRITE R.DATA TO FV.LOG.OUT.PATH, LOG.FILE.NAME
         RETURN
     END
-
-
-    IF (RE.KEY[1,2] <> 'PL') THEN
-        R.DATA = RAISE(CAL.GRP.REC)
-    END ELSE
-        R.DATA = RAISE(CPL.GRP.REC)
-    END
-    GOSUB WRITE.DATA
 
 !   ---------------------------------------------------------------------
     IF (DFF.DATA<2> + DFF.DATA<3>) NE 0 THEN
@@ -142,18 +135,17 @@ PROCESS.CAL:
     GRP.ID = CHANGE(R.DATA, @FM, "*")
     CALL F.READ(FN.ERP.GL.TAB, GRP.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
     IF (R.ERP.GL.REC) THEN
-        CAL.GRP.REC<EXT.CCY.DR.AMT> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT * (-1)
-        CAL.GRP.REC<EXT.LCY.DR.AMT> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT * (-1)
+        R.DATA<EXT.CCY.DR.AMT> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT * (-1)
+        R.DATA<EXT.LCY.DR.AMT> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT * (-1)
 
-        CAL.GRP.REC<EXT.CCY.CR.AMT> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
-        CAL.GRP.REC<EXT.LCY.CR.AMT> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
+        R.DATA<EXT.CCY.CR.AMT> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
+        R.DATA<EXT.LCY.CR.AMT> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
     END ELSE
-        CAL.GRP.REC = LOWER(R.DATA)
-        CAL.GRP.REC<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
-        CAL.GRP.REC<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
+        R.DATA<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
+        R.DATA<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
 
-        CAL.GRP.REC<EXT.CCY.CR.AMT> += CCY.CR.MVMT
-        CAL.GRP.REC<EXT.LCY.CR.AMT> += LCY.CR.MVMT
+        R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
+        R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
     *   ---------------------------------------------------------------------
     *   Processing Difference For Current CAL Key
@@ -170,7 +162,7 @@ PROCESS.CAL:
         DFF.DATA<3> = 0
     END
     *   End Difference Processing
-!   ---------------------------------------------------------------------
+
     LINE.ACCT = ""
     LINE.ACCT = R.DATA<EXT.ACCOUNT>
     SUMM.ID = LINE.ID : "," : ERP.CODE : "," : LINE.ACCT :"," : RE.KEY : "-" : RE.TYPE
@@ -178,12 +170,12 @@ PROCESS.CAL:
     SUM.LIST = SUMM.ID
     SUM.DATA = SUMM.ID
 
-
     SUM.DATA<2> += CCY.DB.MVMT
     SUM.DATA<3> += CCY.CR.MVMT
     SUM.DATA<4> += LCY.DB.MVMT
     SUM.DATA<5> += LCY.CR.MVMT
 
+    GOSUB WRITE.DATA
     RETURN
 
 PROCESS.CPL:
@@ -237,21 +229,20 @@ PROCESS.CPL:
     GRP.ID = CHANGE(R.DATA, @FM, "*")
     CALL F.READ(FN.ERP.GL.TAB, GRP.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
     IF (R.ERP.GL.REC) THEN
-        CAL.GRP.REC<EXT.CCY.DR.AMT> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT * (-1)
-        CAL.GRP.REC<EXT.LCY.DR.AMT> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT * (-1)
+        R.DATA<EXT.CCY.DR.AMT> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT * (-1)
+        R.DATA<EXT.LCY.DR.AMT> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT * (-1)
 
-        CAL.GRP.REC<EXT.CCY.CR.AMT> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
-        CAL.GRP.REC<EXT.LCY.CR.AMT> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
+        R.DATA<EXT.CCY.CR.AMT> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
+        R.DATA<EXT.LCY.CR.AMT> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
     END ELSE
-        CAL.GRP.REC = LOWER(R.DATA)
-        CAL.GRP.REC<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
-        CAL.GRP.REC<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
+        R.DATA<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
+        R.DATA<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
 
-        CAL.GRP.REC<EXT.CCY.CR.AMT> += CCY.CR.MVMT
-        CAL.GRP.REC<EXT.LCY.CR.AMT> += LCY.CR.MVMT
+        R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
+        R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
 *   ------
-    *   Processing Difference For Current CAL Key
+    *   Processing Difference For Current CPL Key
     *********************************************
     DIFF.ID = CO.CODE : "-" : RE.CCY
     CALL F.READ(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
@@ -264,6 +255,7 @@ PROCESS.CPL:
         DFF.DATA<2> = 0
         DFF.DATA<3> = 0
     END
+    *   End Difference Processing
 
     LINE.ACCT = ""
     LINE.ACCT = R.DATA<EXT.ACCOUNT>
@@ -279,6 +271,7 @@ PROCESS.CPL:
     SUM.DATA<4> += LCY.DB.MVMT
     SUM.DATA<5> += LCY.CR.MVMT
 
+    GOSUB WRITE.DATA
     RETURN
 
 PROCESS.DFF:
@@ -287,7 +280,6 @@ PROCESS.DFF:
     RE.CCY = FIELD(DIFF.ID, "-", 2, 1)
 
     R.DATA = ""
-
     R.DATA<EXT.CURRENCY> = RE.CCY
     R.DATA<EXT.COMPANY> = "1200"
 
