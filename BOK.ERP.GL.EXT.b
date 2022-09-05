@@ -64,7 +64,7 @@
     END
 
     IF NEW.KEY.FLAG EQ 1 THEN
-        RETURN
+        *RETURN
     END
 
     IF MISSING.CPL.LIST OR MISSING.CAL.LIST THEN
@@ -72,7 +72,7 @@
         R.DATA  = MISSING.CAL.LIST
         R.DATA<-1> = MISSING.CPL.LIST
       *  WRITE R.DATA TO FV.LOG.OUT.PATH, LOG.FILE.NAME
-        RETURN
+       * RETURN
     END
 
 !   ---------------------------------------------------------------------
@@ -150,7 +150,7 @@ PROCESS.CAL:
     *   ---------------------------------------------------------------------
     *   Processing Difference For Current CAL Key
     *********************************************
-    DIFF.ID = CO.CODE : "-" : RE.CCY
+    DIFF.ID = CO.CODE : "*" : RE.CCY
     CALL F.READ(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
     IF (R.ERP.GL.REC) THEN
         DFF.DATA<1> = DIFF.ID
@@ -244,7 +244,7 @@ PROCESS.CPL:
 *   ------
     *   Processing Difference For Current CPL Key
     *********************************************
-    DIFF.ID = CO.CODE : "-" : RE.CCY
+    DIFF.ID = CO.CODE : "*" : RE.CCY
     CALL F.READ(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR)
     IF (R.ERP.GL.REC) THEN
         DFF.DATA<1> = DIFF.ID
@@ -276,8 +276,8 @@ PROCESS.CPL:
 
 PROCESS.DFF:
 ************
-    CO.CODE = FIELD(DIFF.ID, "-", 1, 1)
-    RE.CCY = FIELD(DIFF.ID, "-", 2, 1)
+    CO.CODE = FIELD(DIFF.ID, "*", 1, 1)
+    RE.CCY = FIELD(DIFF.ID, "*", 2, 1)
 
     R.DATA = ""
     R.DATA<EXT.CURRENCY> = RE.CCY
@@ -299,7 +299,7 @@ PROCESS.DFF:
     END
 
     GRP.ID = DIFF.ID
-    GOSUB WRITE.DATA
+    *GOSUB WRITE.DATA
 
     RETURN
 
@@ -362,7 +362,9 @@ WRITE.DATA:
         R.DATA<EXT.CCY.CR.AMT> = ''
     END
 
-    CALL OFS.BUILD.RECORD(APP.NAME, FUNCT, "PROCESS", OFSVERSION, "", NO.OF.AUTH, GRP.ID, R.DATA, OFS.RECORD)
+    * CALL OFS.BUILD.RECORD(APP.NAME, FUNCT, "PROCESS", OFSVERSION, "", NO.OF.AUTH, GRP.ID, R.DATA, OFS.RECORD)
+    * RE.KEY
+    CALL OFS.BUILD.RECORD(APP.NAME, FUNCT, "PROCESS", OFSVERSION, "", NO.OF.AUTH, RE.KEY, R.DATA, OFS.RECORD)
     CALL OFS.CALL.BULK.MANAGER(options, OFS.RECORD, theResponse, txnCommitted)
 
     RETURN
