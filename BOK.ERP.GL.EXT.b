@@ -26,11 +26,6 @@
     LPERIOD = RE.DATE[5,2]
     NEW.KEY.FLAG = 0
 
-    OFS.RECORD = ""
-    requestCommitted = ""
-    theResponse = ""
-    txnCommitted = ""
-
     BATCH.NAME = "BKGL" : RE.DATE[2] : RE.DATE[5,2] : RE.DATE[1,4]
 
     RSLC.ID = WORK.ID['*',1,1]
@@ -80,7 +75,6 @@
     END
 
     RETURN
-
 
 PROCESS.CAL:
 ************
@@ -143,6 +137,7 @@ PROCESS.CAL:
         R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
+
     *   -----------------------------------------
     *   Processing Difference For Current CAL Key
     *********************************************
@@ -236,6 +231,7 @@ PROCESS.CPL:
         R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
+
     *   -----------------------------------------
     *   Processing Difference For Current CPL Key
     *********************************************
@@ -354,8 +350,8 @@ WRITE.DATA:
         R.DATA<EXT.CCY.CR.AMT> = ''
     END
 
-    CALL OFS.BUILD.RECORD(APP.NAME, FUNCT, "PROCESS", OFSVERSION, "", NO.OF.AUTH, GRP.ID, R.DATA, OFS.RECORD)
-    CALL OFS.CALL.BULK.MANAGER(options, OFS.RECORD, theResponse, txnCommitted)
+    CALL F.WRITE(F.ERP.GL.TAB, GRP.ID, R.DATA)
+    CALL JOURNAL.UPDATE("")
     CALL F.RELEASE(FN.ERP.GL.TAB, GRP.ID, F.ERP.GL.TAB)
 
     RETURN

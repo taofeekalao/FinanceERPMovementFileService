@@ -22,7 +22,6 @@
     $INSERT I_F.ERP.GL
     $INSERT I_BOK.ERP.GL.EXT
 
-
     FN.CAL = "F.CONSOLIDATE.ASST.LIAB"
     F.CAL = ""
     CALL OPF(FN.CAL, F.CAL)
@@ -56,7 +55,6 @@
         FILE.NAME = R.GL.PARAM<BOK.ERP.FILE.NAME>
     END
 
-
     EXT.DIR = FIELD(R.GL.PARAM<BOK.ERP.ERP.UPLOAD.PATH>,"ERP.GL",1,1)
 
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
@@ -66,7 +64,6 @@
     FN.LOG.OUT.PATH = EXT.DIR:"ERP.GL.ERR.LOG"
     FILE.SEP = ''
     LOG.FILE.NAME = "ERP.GL.ERROR.LOG_":RE.DATE
-
 
     OPEN '', FN.LOG.OUT.PATH TO F.LOG.DIR ELSE
         EX.CMD = 'CREATE-FILE DATA ' : FN.LOG.OUT.PATH :' TYPE=UD'
@@ -78,16 +75,6 @@
         PRINT ETEXT
         RETURN
     END
-
-    options = ""
-    options<1> = "AA.COB"
-    options<4> = ""
-
-    FUNCT = "I"
-    APP.NAME = "ERP.GL"
-
-    OFSVERSION = APP.NAME:",AUTH"
-    NO.OF.AUTH = "0"
 
     RETURN
 END
