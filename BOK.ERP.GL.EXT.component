@@ -16,3 +16,18 @@ public method glErpExtractSelect()
 {
 	jBC: BOK.ERP.GL.EXT.SELECT
 }
+
+public method glErpTable()
+{
+	jBC: ERP.GL
+}
+
+public method glErpTableFields()
+{
+	jBC: ERP.GL.FIELDS
+}
+
+public method updateRepLineFoceRecalc()
+{
+	jBC: BOK.UPDATE.LINE.CALC
+}

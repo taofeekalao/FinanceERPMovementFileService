@@ -1,7 +1,7 @@
 *******************************************************************
 *   Meraki Systems
 *   August 17, 2022
-*   This Is To Genreate T24 GL Movements Flat File For Third Party.
+*   This Is To Genreate T24 GL Movements Flat File For Third Party Application.
 *
 *******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
@@ -15,8 +15,10 @@
     $INSERT I_BOK.ERP.GL.EXT
 
 *   Clear Table Before Generating New Records
-    DEL.CMD = "CLEAR-FILE F.ERP.GL"
-    EXECUTE DEL.CMD
+    DEL.CMD.LIVE = "CLEAR-FILE F.ERP.GL"
+    EXECUTE DEL.CMD.LIVE
+    * DEL.CMD.HIS = "CLEAR-FILE 'F.ERP.GL$HIS'"
+    * EXECUTE DEL.CMD.HIS
 
 *   Report Head
     ARGS = "BKTB"
@@ -26,19 +28,14 @@
 
 *   Selects All Asset & Liability Work Table Records 
     AL.LIST  = dasReStatLineAlWorkHavingReportName
-    *CALL DAS("RE.STAT.LINE.AL.WORK", AL.LIST, ARGS, TABLE.SUFFIX)
+    CALL DAS("RE.STAT.LINE.AL.WORK", AL.LIST, ARGS, TABLE.SUFFIX)
 
 *   Selects All Profit & Loss Work Table Records 
     PL.LIST  = dasReStatLinePlWorkHavingReportName
-    *CALL DAS("RE.STAT.LINE.PL.WORK", PL.LIST, ARGS, TABLE.SUFFIX)
+    CALL DAS("RE.STAT.LINE.PL.WORK", PL.LIST, ARGS, TABLE.SUFFIX)
 
 *   Merging Dynamic Arrays List
-    *SELECTION.LIST = AL.LIST:FM:PL.LIST
-    SELECTION.LIST = "BKTB.0050.RW0010002*AC.1.TR.RWF.10000........1....RW0010002*DEBIT*"
-    SELECTION.LIST<-1> = "BKTB.0100.RW0010062*AC.1.TR.EUR.10000........1....RW0010062*DEBIT*"
-    SELECTION.LIST<-1> = "BKTB.0050.RW0010002*AC.1.TR.RWF.10199........403....RW0010002*DEBIT*"
-    SELECTION.LIST<-1> = "BKTB.0110.RW0010018*AC.1.TR.GBP.10011........403....RW0010018*DEBIT*"
-*   -----------------------------------
+    SELECTION.LIST = AL.LIST:@FM:PL.LIST
     CALL BATCH.BUILD.LIST("", SELECTION.LIST)
 
     RETURN
