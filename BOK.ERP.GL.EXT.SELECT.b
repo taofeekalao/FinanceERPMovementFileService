@@ -17,8 +17,6 @@
 *   Clear Table Before Generating New Records
     DEL.CMD.LIVE = "CLEAR-FILE F.ERP.GL"
     EXECUTE DEL.CMD.LIVE
-    * DEL.CMD.HIS = "CLEAR-FILE 'F.ERP.GL$HIS'"
-    * EXECUTE DEL.CMD.HIS
 
 *   Report Head
     ARGS = "BKTB"

@@ -1,7 +1,7 @@
 *******************************************************************
 *   Meraki Systems
 *   August 17, 2022
-*   This Is To Genreate T24 GL Movements Flat File For Third Party.
+*   This Is To Genreate T24 GL Movements Flat File For Third Party Application.
 *
 *******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
@@ -20,7 +20,6 @@
     $INSERT I_BATCH.FILES
     $INSERT I_BOK.ERP.GL.EXT
 
-    DEBUG
     PREV.ID = ""
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
@@ -71,8 +70,6 @@
         R.DATA = ''
         R.DATA  = MISSING.CAL.LIST
         R.DATA<-1> = MISSING.CPL.LIST
-      *  WRITE R.DATA TO FV.LOG.OUT.PATH, LOG.FILE.NAME
-       * RETURN
     END
 
 !   ---------------------------------------------------------------------
@@ -146,7 +143,7 @@ PROCESS.CAL:
         R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
-    *   ---------------------------------------------------------------------
+    *   -----------------------------------------
     *   Processing Difference For Current CAL Key
     *********************************************
     DIFF.ID = CO.CODE : "*" : RE.CCY
@@ -212,7 +209,7 @@ PROCESS.CPL:
     END
 
     R.DATA = ""
-    R.DATA<EXT.STATUS.CODE> = LINE.DESC ;*R.RSLC<RE.SLC.DESC,2,1>
+    R.DATA<EXT.STATUS.CODE> = LINE.DESC         ;*R.RSLC<RE.SLC.DESC,2,1>
     R.DATA<EXT.CURRENCY> = RE.CCY
     R.DATA<EXT.COMPANY> = "1200"
 
@@ -220,7 +217,7 @@ PROCESS.CPL:
     GOSUB GET.ERP.CODE
     R.DATA<EXT.BRANCH> = ERP.CODE
 
-    R.DATA<EXT.ACCOUNT> = LINE.DESC     ;*R.RSLC<RE.SLC.DESC,2,1>
+    R.DATA<EXT.ACCOUNT> = LINE.DESC             ;*R.RSLC<RE.SLC.DESC,2,1>
     R.DATA<EXT.SECTOR.ACTV> = FIELD(RE.KEY, ".", 4, 1)
     R.DATA<EXT.COST.CENTER> = "2105"
 
@@ -239,7 +236,7 @@ PROCESS.CPL:
         R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
     END
-    *   ------
+    *   -----------------------------------------
     *   Processing Difference For Current CPL Key
     *********************************************
     DIFF.ID = CO.CODE : "*" : RE.CCY
@@ -345,9 +342,6 @@ WRITE.DATA:
 
     R.DATA<EXT.JRNL.BATCH.NAME> = BATCH.NAME
     R.DATA<EXT.INTRFCE.GRP.ID> = RE.DATE
-
-    * R.DATA<EXT.LCY.DR.AMT> = ''
-    * R.DATA<EXT.LCY.CR.AMT> = ''
 
     R.DATA<EXT.CCY.DR.AMT> = R.DATA<EXT.CCY.DR.AMT> + 0
     R.DATA<EXT.CCY.CR.AMT> = R.DATA<EXT.CCY.CR.AMT> + 0

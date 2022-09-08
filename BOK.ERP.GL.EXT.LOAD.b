@@ -1,7 +1,7 @@
 *******************************************************************
 *   Meraki Systems
 *   August 17, 2022
-*   This Is To Genreate T24 GL Movements Flat File For Third Party.
+*   This Is To Genreate T24 GL Movements Flat File For Third Party Application.
 *
 *******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
@@ -88,7 +88,6 @@
 
     OFSVERSION = APP.NAME:",AUTH"
     NO.OF.AUTH = "0"
-
 
     RETURN
 END
