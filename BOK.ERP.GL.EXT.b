@@ -20,6 +20,7 @@
     $INSERT I_BATCH.FILES
     $INSERT I_BOK.ERP.GL.EXT
 
+    DFF.DATA = ""
     PREV.ID = ""
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
@@ -69,8 +70,7 @@
 
 !   ---------------------------------------------------------------------
     IF (DFF.DATA<2> + DFF.DATA<3>) NE 0 THEN
-        CCY.BALANCE = DFF.DATA<2> * (-1)
-        LCY.BALANCE = DFF.DATA<3> * (-1)
+        DEBUG
         GOSUB PROCESS.DFF
     END
 
@@ -149,8 +149,8 @@ PROCESS.CAL:
         DFF.DATA<3> = (R.ERP.GL.REC<EXT.LCY.DR.AMT> + R.ERP.GL.REC<EXT.LCY.CR.AMT>) + (LCY.DB.MVMT + LCY.CR.MVMT)
     END ELSE
         DFF.DATA<1> = DIFF.ID
-        DFF.DATA<2> = 0
-        DFF.DATA<3> = 0
+        DFF.DATA<2> = CCY.DB.MVMT + CCY.CR.MVMT
+        DFF.DATA<3> = LCY.DB.MVMT + LCY.CR.MVMT
     END
     *   End Difference Processing
 
@@ -243,8 +243,8 @@ PROCESS.CPL:
         DFF.DATA<3> = (R.ERP.GL.REC<EXT.LCY.DR.AMT> + R.ERP.GL.REC<EXT.LCY.CR.AMT>) + (LCY.DB.MVMT + LCY.CR.MVMT)
     END ELSE
         DFF.DATA<1> = DIFF.ID
-        DFF.DATA<2> = 0
-        DFF.DATA<3> = 0
+        DFF.DATA<2> = CCY.DB.MVMT + CCY.CR.MVMT
+        DFF.DATA<3> = LCY.DB.MVMT + LCY.CR.MVMT
     END
     *   End Difference Processing
 
@@ -267,6 +267,10 @@ PROCESS.CPL:
 
 PROCESS.DFF:
 ************
+    DIFF.ID = DFF.DATA<1>
+    CCY.BALANCE = DFF.DATA<2> * (-1)
+    LCY.BALANCE = DFF.DATA<3> * (-1)
+
     CO.CODE = FIELD(DIFF.ID, "*", 1, 1)
     RE.CCY = FIELD(DIFF.ID, "*", 2, 1)
 
