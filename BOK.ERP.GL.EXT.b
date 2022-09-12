@@ -61,13 +61,6 @@
     IF NEW.KEY.FLAG EQ 1 THEN
         RETURN
     END
-
-    IF MISSING.CPL.LIST OR MISSING.CAL.LIST THEN
-        R.DATA = ''
-        R.DATA  = MISSING.CAL.LIST
-        R.DATA<-1> = MISSING.CPL.LIST
-    END
-
 !   ---------------------------------------------------------------------
     IF (DFF.DATA<2> + DFF.DATA<3>) NE 0 THEN
         DEBUG
@@ -154,18 +147,6 @@ PROCESS.CAL:
     END
     *   End Difference Processing
 
-    LINE.ACCT = ""
-    LINE.ACCT = R.DATA<EXT.ACCOUNT>
-    SUMM.ID = LINE.ID : "," : ERP.CODE : "," : LINE.ACCT :"," : RE.KEY : "-" : RE.TYPE
-
-    SUM.LIST = SUMM.ID
-    SUM.DATA = SUMM.ID
-
-    SUM.DATA<2> += CCY.DB.MVMT
-    SUM.DATA<3> += CCY.CR.MVMT
-    SUM.DATA<4> += LCY.DB.MVMT
-    SUM.DATA<5> += LCY.CR.MVMT
-
     GOSUB WRITE.DATA
     RETURN
 
@@ -247,20 +228,6 @@ PROCESS.CPL:
         DFF.DATA<3> = LCY.DB.MVMT + LCY.CR.MVMT
     END
     *   End Difference Processing
-
-    LINE.ACCT = ""
-    LINE.ACCT = R.DATA<EXT.ACCOUNT>
-
-    SUMM.ID = LINE.ID : "," : ERP.CODE : "," : LINE.ACCT :"," : RE.KEY : "-" : RE.TYPE
-
-    SUM.LIST = SUMM.ID
-    SUM.DATA = SUMM.ID
-
-
-    SUM.DATA<2> += CCY.DB.MVMT
-    SUM.DATA<3> += CCY.CR.MVMT
-    SUM.DATA<4> += LCY.DB.MVMT
-    SUM.DATA<5> += LCY.CR.MVMT
 
     GOSUB WRITE.DATA
     RETURN

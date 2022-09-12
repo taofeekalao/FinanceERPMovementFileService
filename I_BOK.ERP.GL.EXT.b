@@ -18,18 +18,7 @@
     FN.ERP.GL.PARAM,
     F.ERP.GL.PARAM,
 
-    MISSING.CPL.LIST,
-    MISSING.CAL.LIST,
-
     RECID.CPL,
     RECID.CAL,
-
-    options,
-    FUNCT,
-
-    APP.NAME,
-
-    OFSVERSION,
-    NO.OF.AUTH,
 
     BOK.ERP.GL.EXT.END
