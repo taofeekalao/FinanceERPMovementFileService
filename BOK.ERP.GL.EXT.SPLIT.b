@@ -63,7 +63,6 @@
     END
 !   ---------------------------------------------------------------------
     IF (DFF.DATA<2>) OR (DFF.DATA<3>) THEN
-        DEBUG
         GOSUB PROCESS.DFF
     END
 
@@ -116,7 +115,7 @@ PROCESS.CAL:
     R.DATA<EXT.COST.CENTER> = "2105"
 
     GRP.ID = CHANGE(R.DATA, @FM, "*")
-    CALL F.READU(FN.ERP.GL.TAB, GRP.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
+    CALL F.READU(FN.ERP.GL.TAB, RE.KEY, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
     IF (R.ERP.GL.REC) THEN
         R.DATA<EXT.CCY.DR.AMT> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT * (-1)
         R.DATA<EXT.LCY.DR.AMT> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT * (-1)
@@ -134,16 +133,17 @@ PROCESS.CAL:
     *   -----------------------------------------
     *   Processing Difference For Current CAL Key
     *********************************************
+    DFF.DATA<1> = ""
     DIFF.ID = CO.CODE : "*" : RE.CCY
     CALL F.READU(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
     IF (R.ERP.GL.REC) THEN
         DFF.DATA<1> = DIFF.ID
-        DFF.DATA<2> = (R.ERP.GL.REC<EXT.CCY.DR.AMT> + R.ERP.GL.REC<EXT.CCY.CR.AMT>) + (CCY.DB.MVMT + CCY.CR.MVMT)
-        DFF.DATA<3> = (R.ERP.GL.REC<EXT.LCY.DR.AMT> + R.ERP.GL.REC<EXT.LCY.CR.AMT>) + (LCY.DB.MVMT + LCY.CR.MVMT)
+        DFF.DATA<2> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT
+        DFF.DATA<3> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
     END ELSE
         DFF.DATA<1> = DIFF.ID
-        DFF.DATA<2> = CCY.DB.MVMT + CCY.CR.MVMT
-        DFF.DATA<3> = LCY.DB.MVMT + LCY.CR.MVMT
+        DFF.DATA<2> = LCY.DB.MVMT
+        DFF.DATA<3> = LCY.CR.MVMT
     END
     *   End Difference Processing
 
@@ -168,8 +168,8 @@ PROCESS.CPL:
         LCY.CR.MVMT += R.CPL<RE.PTL.CREDIT.MOVEMENT, CPS>
 
         IF RE.CCY EQ LCCY THEN
-            CCY.DB.MVMT = LCY.DB.MVMT
-            CCY.CR.MVMT = LCY.CR.MVMT
+            CCY.DB.MVMT += LCY.DB.MVMT
+            CCY.CR.MVMT += LCY.CR.MVMT
         END ELSE
 
             CCY.DB.MVMT += R.CPL<RE.PTL.CCY.DEBIT.MVE, CPS>
@@ -198,7 +198,7 @@ PROCESS.CPL:
     R.DATA<EXT.COST.CENTER> = "2105"
 
     GRP.ID = CHANGE(R.DATA, @FM, "*")
-    CALL F.READU(FN.ERP.GL.TAB, GRP.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
+    CALL F.READU(FN.ERP.GL.TAB, RE.KEY, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
     IF (R.ERP.GL.REC) THEN
         R.DATA<EXT.CCY.DR.AMT> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT * (-1)
         R.DATA<EXT.LCY.DR.AMT> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT * (-1)
@@ -216,16 +216,17 @@ PROCESS.CPL:
     *   -----------------------------------------
     *   Processing Difference For Current CPL Key
     *********************************************
+    DFF.DATA<1> = ""
     DIFF.ID = CO.CODE : "*" : RE.CCY
     CALL F.READU(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
     IF (R.ERP.GL.REC) THEN
         DFF.DATA<1> = DIFF.ID
-        DFF.DATA<2> = (R.ERP.GL.REC<EXT.CCY.DR.AMT> + R.ERP.GL.REC<EXT.CCY.CR.AMT>) + (CCY.DB.MVMT + CCY.CR.MVMT)
-        DFF.DATA<3> = (R.ERP.GL.REC<EXT.LCY.DR.AMT> + R.ERP.GL.REC<EXT.LCY.CR.AMT>) + (LCY.DB.MVMT + LCY.CR.MVMT)
+        DFF.DATA<2> = R.ERP.GL.REC<EXT.LCY.DR.AMT> + LCY.DB.MVMT
+        DFF.DATA<3> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
     END ELSE
         DFF.DATA<1> = DIFF.ID
-        DFF.DATA<2> = CCY.DB.MVMT + CCY.CR.MVMT
-        DFF.DATA<3> = LCY.DB.MVMT + LCY.CR.MVMT
+        DFF.DATA<2> = LCY.DB.MVMT
+        DFF.DATA<3> = LCY.CR.MVMT
     END
     *   End Difference Processing
 
@@ -235,8 +236,8 @@ PROCESS.CPL:
 PROCESS.DFF:
 ************
     DIFF.ID = DFF.DATA<1>
-    CCY.BALANCE = DFF.DATA<2>
-    LCY.BALANCE = DFF.DATA<3>
+    DR.LCY.BALANCE = DFF.DATA<2>
+    CR.LCY.BALANCE = DFF.DATA<3>
 
     CO.CODE = FIELD(DIFF.ID, "*", 1, 1)
     RE.CCY = FIELD(DIFF.ID, "*", 2, 1)
@@ -252,19 +253,12 @@ PROCESS.DFF:
     R.DATA<EXT.ACCOUNT> = "23227000"
     R.DATA<EXT.COST.CENTER> = "2105"
 
-    IF LCY.BALANCE LT 0 THEN
-        R.DATA<EXT.CCY.DR.AMT> = CCY.BALANCE
-        R.DATA<EXT.LCY.DR.AMT> = LCY.BALANCE
+    R.DATA<EXT.CCY.DR.AMT> = ""
+    R.DATA<EXT.LCY.DR.AMT> = DR.LCY.BALANCE
 
-        R.DATA<EXT.CCY.CR.AMT> = ""
-        R.DATA<EXT.LCY.CR.AMT> = ""
-    END ELSE
-        R.DATA<EXT.CCY.CR.AMT> = CCY.BALANCE
-        R.DATA<EXT.LCY.CR.AMT> = LCY.BALANCE
+    R.DATA<EXT.CCY.CR.AMT> = ""
+    R.DATA<EXT.LCY.CR.AMT> = CR.LCY.BALANCE
 
-        R.DATA<EXT.CCY.DR.AMT> = ""
-        R.DATA<EXT.LCY.DR.AMT> = ""
-    END
 
     GRP.ID = DIFF.ID
     GOSUB WRITE.DATA
@@ -318,6 +312,7 @@ WRITE.DATA:
 
     R.DATA<EXT.CCY.DR.AMT> = R.DATA<EXT.CCY.DR.AMT> + 0
     R.DATA<EXT.CCY.CR.AMT> = R.DATA<EXT.CCY.CR.AMT> + 0
+    R.DATA<EXT.INPUTTER> = GRP.ID
 
     IF NOT(R.DATA<EXT.CCY.DR.AMT>) THEN
         R.DATA<EXT.CCY.DR.AMT> = ''
