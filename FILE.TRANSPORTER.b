@@ -108,8 +108,8 @@
                 INTERMEDIATE.REC<-1> = ""
             END ELSE
             * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
-                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.CR.AMT>         ; *    Credit Total Value Reporting On The Debit Column
-                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.DR.AMT> * -1    ; *    Debit Total Value Reporting On The Credit Column
+                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.CR.AMT>         ; *    Credit Total Value Reporting On The Debit Column
+                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.DR.AMT> * -1    ; *    Debit Total Value Reporting On The Credit Column
                 INTERMEDIATE.REC<-1> = ""
                 INTERMEDIATE.REC<-1> = ""
             END
