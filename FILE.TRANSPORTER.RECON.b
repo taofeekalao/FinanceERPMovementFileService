@@ -20,11 +20,6 @@
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     INTERMEDIATE.REC = ""
 
-    *   Work Directory
-    FN.ERP.GL.TAB = 'F.ERP.GL'
-    F.ERP.GL.TAB = ''
-    CALL OPF(FN.ERP.GL.TAB, F.ERP.GL.TAB)
-
     *   Backup Directory   
     FN.BACKUP = 'ERP.GL.BACKUP'
     F.BACKUP = ''
@@ -41,13 +36,8 @@
         FILE.SEP = R.GL.PARAM<BOK.ERP.SEPARATOR>
         FILE.NAME = R.GL.PARAM<BOK.ERP.FILE.NAME>
     END
-    FILE.NAME = FILE.NAME:"_":"RECON":"_":RE.DATE:".csv"
+    FILE.NAME = FILE.NAME:"_":"Recon":"_":RE.DATE:".csv"
     FINAL.REC = ""
-
-    *   Exchange Directory
-    FN.EXCHANGE = EXT.DIR
-    F.EXCHANGE = ''
-    CALL OPF(FN.EXCHANGE, F.EXCHANGE)
 
 	*	Set Headers
     FINAL.REC<-1> = "Status Code,Ledger ID,Effective Date of Transaction,Journal Source,Journal Category,Currency Code,Journal Entry Creation Date,Actual Flag,Company,CostCenter,Branches,Account,LoB,Intercompany,Sector of activities,Institutional sector,Future1,Future2"
@@ -132,8 +122,5 @@
         STOP 'error writing into account detail to ':F.BACKUP
     END
 
-    WRITE FINAL.REC TO F.EXCHANGE, FILE.NAME ON ERROR
-        STOP 'error writing into account detail to ':EXT.DIR
-    END
     RETURN
 END
