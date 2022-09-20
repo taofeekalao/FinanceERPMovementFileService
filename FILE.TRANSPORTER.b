@@ -20,11 +20,6 @@
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     INTERMEDIATE.REC = ""
 
-    *   Work Directory
-    FN.ERP.GL.TAB = 'F.ERP.GL'
-    F.ERP.GL.TAB = ''
-    CALL OPF(FN.ERP.GL.TAB, F.ERP.GL.TAB)
-
     *   Backup Directory   
     FN.BACKUP = 'ERP.GL.BACKUP'
     F.BACKUP = ''
@@ -44,7 +39,7 @@
     FILE.NAME = FILE.NAME:"_":RE.DATE:".csv"
     FINAL.REC = ""
 
-    *   Exchange Directory
+    *   Exchange Directory  /   Work Directory
     FN.EXCHANGE = EXT.DIR
     F.EXCHANGE = ''
     CALL OPF(FN.EXCHANGE, F.EXCHANGE)
