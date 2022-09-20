@@ -5,7 +5,7 @@
 	*	This is file transporter
 	*---------------------------------------------------------------------
     $PACKAGE BOK.ERP.GL.EXT
-    SUBROUTINE FILE.TRANSPORTER
+    SUBROUTINE FILE.TRANSPORTER.RECON
 
     $INSERT I_COMMON
     $INSERT I_EQUATE
@@ -41,7 +41,7 @@
         FILE.SEP = R.GL.PARAM<BOK.ERP.SEPARATOR>
         FILE.NAME = R.GL.PARAM<BOK.ERP.FILE.NAME>
     END
-    FILE.NAME = FILE.NAME:"_":RE.DATE:".csv"
+    FILE.NAME = FILE.NAME:"_":"RECON":"_":RE.DATE:".csv"
     FINAL.REC = ""
 
     *   Exchange Directory
@@ -104,12 +104,12 @@
             IF MOVEMENT.REC<EXT.ACCOUNT> NE '23227000' THEN
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.DR.AMT>
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.CR.AMT>
-                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.CR.AMT>
+                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.DR.AMT>
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.CR.AMT>
             END ELSE
             * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.CR.AMT>         ; *    Credit Total Value Reporting On The Debit Column
-                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.DR.AMT> * -1    ; *    Debit Total Value Reporting On The Credit Column
+                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.DR.AMT>         ; *    Debit Total Value Reporting On The Credit Column
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.CR.AMT>
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.DR.AMT> * -1
             END
