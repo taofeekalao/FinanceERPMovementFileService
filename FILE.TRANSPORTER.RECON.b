@@ -20,6 +20,11 @@
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     INTERMEDIATE.REC = ""
 
+    *   Work Table
+    FN.ERP.GL.TAB = 'F.ERP.GL'
+    F.ERP.GL.TAB = ''
+    CALL OPF(FN.ERP.GL.TAB, F.ERP.GL.TAB)
+
     *   Backup Directory   
     FN.BACKUP = 'ERP.GL.BACKUP'
     F.BACKUP = ''
@@ -99,7 +104,7 @@
             END ELSE
             * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.CR.AMT>         ; *    Credit Total Value Reporting On The Debit Column
-                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.DR.AMT>         ; *    Debit Total Value Reporting On The Credit Column
+                INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CCY.DR.AMT> * -1    ; *    Debit Total Value Reporting On The Credit Column
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.CR.AMT>
                 INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LCY.DR.AMT> * -1
             END

@@ -20,6 +20,11 @@
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     INTERMEDIATE.REC = ""
 
+    *   Work Table
+    FN.ERP.GL.TAB = 'F.ERP.GL'
+    F.ERP.GL.TAB = ''
+    CALL OPF(FN.ERP.GL.TAB, F.ERP.GL.TAB)
+
     *   Backup Directory   
     FN.BACKUP = 'ERP.GL.BACKUP'
     F.BACKUP = ''
