@@ -41,7 +41,7 @@
         FILE.SEP = R.GL.PARAM<BOK.ERP.SEPARATOR>
         FILE.NAME = R.GL.PARAM<BOK.ERP.FILE.NAME>
     END
-    FILE.NAME = FILE.NAME:"_":RE.DATE:".csv"
+    FILE.NAME = FILE.NAME:"_":RE.DATE:"_":"1":".csv"
     FINAL.REC = ""
 
     *   Exchange Directory  /   Work Directory
