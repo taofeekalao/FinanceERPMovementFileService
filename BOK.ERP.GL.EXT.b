@@ -4,6 +4,12 @@
 *   This Is To Genreate T24 GL Movements Flat File For Third Party Application.
 *
 *******************************************************************
+*	Meraki Systems
+*	December 3, 2022
+*	Modification To Include Extraction Of Balances From Keys
+*	EXT.RESERVED.20 Is Used In This Case For CCY Balance
+*	EXT.RESERVED.19 Is Used In This Case For LCY Balance
+*******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
     SUBROUTINE BOK.ERP.GL.EXT(WORK.ID)
 
@@ -74,6 +80,9 @@ PROCESS.CAL:
     LOCATE RE.TYPE IN R.CAL<RE.ASL.TYPE,1> SETTING APS ELSE
         RETURN
     END
+	
+	LCY.BALANCE = 0
+	CCY.BALANCE = 0
 
     LCY.DB.MVMT = 0
     CCY.DB.MVMT = 0
@@ -85,12 +94,15 @@ PROCESS.CAL:
         IF RE.CCY EQ LCCY THEN
             LCY.DB.MVMT += R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
             LCY.CR.MVMT += R.CAL<RE.ASL.CREDIT.MOVEMENT, APS>
+			LCY.BALANCE += R.CAL<RE.ASL.BALANCE, APS>
         END ELSE
             LCY.DB.MVMT += R.CAL<RE.ASL.LOCAL.DEBIT.MVE, APS>
             LCY.CR.MVMT += R.CAL<RE.ASL.LOCAL.CREDT.MVE, APS>
+			LCY.BALANCE += R.CAL<RE.ASL.LOCAL.BALANCE, APS>
         END
         CCY.DB.MVMT += R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
         CCY.CR.MVMT += R.CAL<RE.ASL.CREDIT.MOVEMENT, APS>
+		CCY.BALANCE += R.CAL<RE.ASL.BALANCE, APS>
     END
 
     IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
@@ -122,12 +134,18 @@ PROCESS.CAL:
 
         R.DATA<EXT.CCY.CR.AMT> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
+		
+        R.DATA<EXT.RESERVED.20> = R.ERP.GL.REC<EXT.RESERVED.20> + CCY.BALANCE 
+        R.DATA<EXT.RESERVED.19> = R.ERP.GL.REC<EXT.RESERVED.19> + LCY.BALANCE 	
     END ELSE
         R.DATA<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
         R.DATA<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
 
         R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
+		
+        R.DATA<EXT.RESERVED.20> += CCY.BALANCE 
+        R.DATA<EXT.RESERVED.19> += LCY.BALANCE 		
     END
 
     *   -----------------------------------------
@@ -161,6 +179,9 @@ PROCESS.CPL:
         RETURN
     END
 
+	LCY.BALANCE = 0
+	CCY.BALANCE = 0
+	
     LCY.DB.MVMT = 0
     CCY.DB.MVMT = 0
 
@@ -170,14 +191,17 @@ PROCESS.CPL:
     IF R.CPL<RE.PTL.DATE.LAST.UPDATE> EQ RE.DATE THEN
         LCY.DB.MVMT += R.CPL<RE.PTL.DEBIT.MOVEMENT, CPS>
         LCY.CR.MVMT += R.CPL<RE.PTL.CREDIT.MOVEMENT, CPS>
+		LCY.BALANCE = LCY.BALANCE + R.CPL<RE.PTL.BALANCE, CPS> + R.CPL<RE.PTL.BALANCE.YTD, CPS>
 
         IF RE.CCY EQ LCCY THEN
             CCY.DB.MVMT += LCY.DB.MVMT
             CCY.CR.MVMT += LCY.CR.MVMT
+			CCY.BALANCE += LCY.BALANCE
         END ELSE
 
             CCY.DB.MVMT += R.CPL<RE.PTL.CCY.DEBIT.MVE, CPS>
             CCY.CR.MVMT += R.CPL<RE.PTL.CCY.CREDT.MVE, CPS>
+			CCY.BALANCE = CCY.BALANCE + R.CPL<RE.PTL.CCY.BALANCE, CPS> + R.CPL<RE.PTL.CCY.BALANCE.YTD, CPS>
         END
     END
 
@@ -209,12 +233,18 @@ PROCESS.CPL:
 
         R.DATA<EXT.CCY.CR.AMT> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
+
+        R.DATA<EXT.RESERVED.20> = R.ERP.GL.REC<EXT.RESERVED.20> + CCY.BALANCE 
+        R.DATA<EXT.RESERVED.19> = R.ERP.GL.REC<EXT.RESERVED.19> + LCY.BALANCE 	
     END ELSE
         R.DATA<EXT.CCY.DR.AMT> += CCY.DB.MVMT * (-1)
         R.DATA<EXT.LCY.DR.AMT> += LCY.DB.MVMT * (-1)
 
         R.DATA<EXT.CCY.CR.AMT> += CCY.CR.MVMT
         R.DATA<EXT.LCY.CR.AMT> += LCY.CR.MVMT
+		
+        R.DATA<EXT.RESERVED.20> += CCY.BALANCE 
+        R.DATA<EXT.RESERVED.19> += LCY.BALANCE
     END
 
     *   -----------------------------------------
