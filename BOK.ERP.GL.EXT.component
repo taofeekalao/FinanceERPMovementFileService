@@ -37,6 +37,10 @@ public method fileBalanceReporter()
 	jBC: FILE.BALANCE.REPORTER
 }
 
+public method fileBalanceReporterReconciliation()
+{
+	jBC: FILE.TRANSPORTER.RECON
+}
 
 public method fileTransporter()
 {
