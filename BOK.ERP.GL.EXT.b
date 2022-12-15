@@ -10,6 +10,11 @@
 *	EXT.RESERVED.20 Is Used In This Case For CCY Balance
 *	EXT.RESERVED.19 Is Used In This Case For LCY Balance
 *******************************************************************
+*	Meraki Systems
+*	December 15, 2022
+*	Modification To Change From Opening Balances To Closing Balances
+*	Added Calculation Of Difference / Imbalances To Balance Reporting
+*******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
     SUBROUTINE BOK.ERP.GL.EXT(WORK.ID)
 
@@ -160,12 +165,22 @@ PROCESS.CAL:
         DFF.DATA<3> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
         DFF.DATA<4> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT
         DFF.DATA<5> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
+
+        *** Adding difference calculation in balance reporting
+        DFF.DATA<6> = R.ERP.GL.REC<EXT.RESERVED.20> + CCY.BALANCE        ;   *   CCY Reporting
+        DFF.DATA<7> = R.ERP.GL.REC<EXT.RESERVED.19> + LCY.BALANCE        ;   *   LCY Reporting
+        ***
     END ELSE
         DFF.DATA<1> = DIFF.ID
         DFF.DATA<2> = LCY.DB.MVMT
         DFF.DATA<3> = LCY.CR.MVMT
         DFF.DATA<4> = CCY.DB.MVMT
         DFF.DATA<5> = CCY.CR.MVMT
+
+        *** Adding difference calculation in balance reporting
+        DFF.DATA<6> = CCY.BALANCE        ;   *   CCY Reporting
+        DFF.DATA<7> = LCY.BALANCE        ;   *   LCY Reporting
+        ***
     END
     *   End Difference Processing
 
@@ -258,12 +273,22 @@ PROCESS.CPL:
         DFF.DATA<3> = R.ERP.GL.REC<EXT.LCY.CR.AMT> + LCY.CR.MVMT
         DFF.DATA<4> = R.ERP.GL.REC<EXT.CCY.DR.AMT> + CCY.DB.MVMT
         DFF.DATA<5> = R.ERP.GL.REC<EXT.CCY.CR.AMT> + CCY.CR.MVMT
+
+        *** Adding difference calculation in balance reporting
+        DFF.DATA<6> = R.ERP.GL.REC<EXT.RESERVED.20> + CCY.BALANCE        ;   *   CCY Reporting
+        DFF.DATA<7> = R.ERP.GL.REC<EXT.RESERVED.19> + LCY.BALANCE        ;   *   LCY Reporting
+        ***
     END ELSE
         DFF.DATA<1> = DIFF.ID
         DFF.DATA<2> = LCY.DB.MVMT
         DFF.DATA<3> = LCY.CR.MVMT
         DFF.DATA<4> = CCY.DB.MVMT
         DFF.DATA<5> = CCY.CR.MVMT
+
+        *** Adding difference calculation in balance reporting
+        DFF.DATA<6> = CCY.BALANCE        ;   *   CCY Reporting
+        DFF.DATA<7> = LCY.BALANCE        ;   *   LCY Reporting
+        ***
     END
     *   End Difference Processing
 
@@ -297,6 +322,10 @@ PROCESS.DFF:
 
     R.DATA<EXT.CCY.CR.AMT> = CR.CCY.BALANCE
     R.DATA<EXT.LCY.CR.AMT> = CR.LCY.BALANCE
+
+    R.DATA<EXT.RESERVED.20> =  DFF.DATA<6>  ;   *   CCY.CLOSE.BALANCE
+    R.DATA<EXT.RESERVED.19> = DFF.DATA<7>   ;   *   LCY.CLOSE.BALANCE
+
 
     GRP.ID = DIFF.ID
     GOSUB WRITE.DATA
