@@ -32,6 +32,11 @@
     F.ERP.GL.PARAM = ""
     CALL OPF(FN.ERP.GL.PARAM, F.ERP.GL.PARAM)
 
+    *   Backup Directory   
+    FN.BACKUP = 'ERP.GL.BACKUP'
+    F.BACKUP = ''
+    CALL OPF(FN.BACKUP, F.BACKUP)
+
     ERP.GL.PARAM.ID = "RW0010001"
     READ R.GL.PARAM FROM F.ERP.GL.PARAM, ERP.GL.PARAM.ID THEN
         EXT.DIR = R.GL.PARAM<BOK.ERP.ERP.UPLOAD.PATH>
@@ -131,6 +136,10 @@
 
     WRITE FINAL.REC TO F.EXCHANGE, FILE.NAME ON ERROR
         STOP 'error writing into account detail to ':EXT.DIR
+    END
+
+    WRITE FINAL.REC TO F.BACKUP, FILE.NAME ON ERROR
+        STOP 'error writing into account detail to ':F.BACKUP
     END
 
     RETURN
