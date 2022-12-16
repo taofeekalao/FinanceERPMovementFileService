@@ -36,7 +36,9 @@
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
     LPERIOD = RE.DATE[5,2]
-    NEW.KEY.FLAG = 0
+
+    * Suspending Checks For Movement To Add All Balances
+    *NEW.KEY.FLAG = 0
 
     BATCH.NAME = "BKGL" : RE.DATE[2] : RE.DATE[5,2] : RE.DATE[1,4]
 
@@ -69,9 +71,10 @@
         GOSUB PROCESS.CPL
     END
 
-    IF NEW.KEY.FLAG EQ 1 THEN
-        RETURN
-    END
+    * Suspending Checks For Movement To Add All Balances
+    *IF NEW.KEY.FLAG EQ 1 THEN
+    *    RETURN
+    *END
 !   ---------------------------------------------------------------------
     IF (DFF.DATA<2>) OR (DFF.DATA<3>) THEN
         GOSUB PROCESS.DFF
@@ -110,12 +113,13 @@ PROCESS.CAL:
         CCY.BALANCE += R.CAL<RE.ASL.BALANCE, APS> + R.CAL<RE.ASL.CREDIT.MOVEMENT, APS> + R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
     END
 
-    IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
-        IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
-            NEW.KEY.FLAG = 1
-            RETURN
-        END
-    END
+    * Suspending Checks For Movement To Add All Balances
+    *IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
+    *    IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
+    *        NEW.KEY.FLAG = 1
+    *        RETURN
+    *    END
+    *END
 
     R.DATA = ""
     R.DATA<EXT.STATUS.CODE> = LINE.DESC          ;*R.RSLC<RE.SLC.DESC,2,1>
@@ -219,12 +223,13 @@ PROCESS.CPL:
         END
     END
 
-    IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
-        IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
-            NEW.KEY.FLAG = 1
-            RETURN
-        END
-    END
+    * Suspending Checks For Movement To Add All Balances
+    *IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
+    *    IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
+    *        NEW.KEY.FLAG = 1
+    *        RETURN
+    *    END
+    *END
 
     R.DATA = ""
     R.DATA<EXT.STATUS.CODE> = LINE.DESC         ;*R.RSLC<RE.SLC.DESC,2,1>
@@ -298,10 +303,10 @@ PROCESS.CPL:
 PROCESS.DFF:
 ************
     DIFF.ID = DFF.DATA<1>
-    DR.LCY.BALANCE = DFF.DATA<2>
-    CR.LCY.BALANCE = DFF.DATA<3>
-    DR.CCY.BALANCE = DFF.DATA<4>
-    CR.CCY.BALANCE = DFF.DATA<5>
+    *DR.LCY.BALANCE = DFF.DATA<2>
+    *CR.LCY.BALANCE = DFF.DATA<3>
+    *DR.CCY.BALANCE = DFF.DATA<4>
+    *CR.CCY.BALANCE = DFF.DATA<5>
 
     CO.CODE = FIELD(DIFF.ID, "*", 1, 1)
     RE.CCY = FIELD(DIFF.ID, "*", 2, 1)
@@ -317,11 +322,11 @@ PROCESS.DFF:
     R.DATA<EXT.ACCOUNT> = "23227000"
     R.DATA<EXT.COST.CENTER> = "2105"
 
-    R.DATA<EXT.CCY.DR.AMT> = DR.CCY.BALANCE
-    R.DATA<EXT.LCY.DR.AMT> = DR.LCY.BALANCE
+    R.DATA<EXT.CCY.DR.AMT> = DFF.DATA<4>    ;   *   DR.CCY.BALANCE
+    R.DATA<EXT.LCY.DR.AMT> = DFF.DATA<2>    ;   *   DR.LCY.BALANCE
 
-    R.DATA<EXT.CCY.CR.AMT> = CR.CCY.BALANCE
-    R.DATA<EXT.LCY.CR.AMT> = CR.LCY.BALANCE
+    R.DATA<EXT.CCY.CR.AMT> = DFF.DATA<5>    ;   *   CR.CCY.BALANCE
+    R.DATA<EXT.LCY.CR.AMT> = DFF.DATA<3>    ;   *   CR.LCY.BALANCE
 
     R.DATA<EXT.RESERVED.20> =  DFF.DATA<6>  ;   *   CCY.CLOSE.BALANCE
     R.DATA<EXT.RESERVED.19> = DFF.DATA<7>   ;   *   LCY.CLOSE.BALANCE
