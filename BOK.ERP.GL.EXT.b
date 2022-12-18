@@ -37,9 +37,6 @@
     FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
     LPERIOD = RE.DATE[5,2]
 
-    * Suspending Checks For Movement To Add All Balances
-    *NEW.KEY.FLAG = 0
-
     BATCH.NAME = "BKGL" : RE.DATE[2] : RE.DATE[5,2] : RE.DATE[1,4]
 
     RSLC.ID = WORK.ID['*',1,1]
@@ -70,15 +67,8 @@
         RE.CCY = RE.TYPE
         GOSUB PROCESS.CPL
     END
-
-    * Suspending Checks For Movement To Add All Balances
-    *IF NEW.KEY.FLAG EQ 1 THEN
-    *    RETURN
-    *END
 !   ---------------------------------------------------------------------
-    * IF (DFF.DATA<2>) OR (DFF.DATA<3>) THEN
     GOSUB PROCESS.DFF
-    * END
 
     RETURN
 
@@ -98,7 +88,6 @@ PROCESS.CAL:
     LCY.CR.MVMT = 0
     CCY.CR.MVMT = 0
 
-    * IF R.CAL<RE.ASL.DATE.LAST.UPDATE> EQ RE.DATE THEN
     IF RE.CCY EQ LCCY THEN
         LCY.DB.MVMT += R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
         LCY.CR.MVMT += R.CAL<RE.ASL.CREDIT.MOVEMENT, APS>
@@ -111,15 +100,6 @@ PROCESS.CAL:
     CCY.DB.MVMT += R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
     CCY.CR.MVMT += R.CAL<RE.ASL.CREDIT.MOVEMENT, APS>
     CCY.BALANCE += R.CAL<RE.ASL.BALANCE, APS> + R.CAL<RE.ASL.CREDIT.MOVEMENT, APS> + R.CAL<RE.ASL.DEBIT.MOVEMENT, APS>
-    * END
-
-    * Suspending Checks For Movement To Add All Balances
-    *IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
-    *    IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
-    *        NEW.KEY.FLAG = 1
-    *        RETURN
-    *    END
-    *END
 
     R.DATA = ""
     R.DATA<EXT.STATUS.CODE> = LINE.DESC          ;*R.RSLC<RE.SLC.DESC,2,1>
@@ -207,7 +187,6 @@ PROCESS.CPL:
     LCY.CR.MVMT = 0
     CCY.CR.MVMT = 0
 
-    *IF R.CPL<RE.PTL.DATE.LAST.UPDATE> EQ RE.DATE THEN
     LCY.DB.MVMT += R.CPL<RE.PTL.DEBIT.MOVEMENT, CPS>
     LCY.CR.MVMT += R.CPL<RE.PTL.CREDIT.MOVEMENT, CPS>
     LCY.BALANCE += R.CPL<RE.PTL.BALANCE, CPS> + R.CPL<RE.PTL.BALANCE.YTD, CPS> + R.CPL<RE.PTL.DEBIT.MOVEMENT, CPS> + R.CPL<RE.PTL.CREDIT.MOVEMENT, CPS>
@@ -221,15 +200,6 @@ PROCESS.CPL:
         CCY.CR.MVMT += R.CPL<RE.PTL.CCY.CREDT.MVE, CPS>
         CCY.BALANCE += R.CPL<RE.PTL.CCY.BALANCE, CPS> + R.CPL<RE.PTL.CCY.BALANCE.YTD, CPS> + R.CPL<RE.PTL.CCY.DEBIT.MVE, CPS> + R.CPL<RE.PTL.CCY.CREDT.MVE, CPS>
     END
-   * END
-
-    * Suspending Checks For Movement To Add All Balances
-    *IF NOT(LCY.DB.MVMT + CCY.DB.MVMT) THEN
-    *    IF NOT(LCY.CR.MVMT + CCY.CR.MVMT) THEN
-    *        NEW.KEY.FLAG = 1
-    *        RETURN
-    *    END
-    *END
 
     R.DATA = ""
     R.DATA<EXT.STATUS.CODE> = LINE.DESC         ;*R.RSLC<RE.SLC.DESC,2,1>
@@ -302,15 +272,6 @@ PROCESS.CPL:
 
 PROCESS.DFF:
 ************
-    DIFF.ID = DFF.DATA<1>
-    *DR.LCY.BALANCE = DFF.DATA<2>
-    *CR.LCY.BALANCE = DFF.DATA<3>
-    *DR.CCY.BALANCE = DFF.DATA<4>
-    *CR.CCY.BALANCE = DFF.DATA<5>
-
-    * CO.CODE = FIELD(DIFF.ID, "*", 1, 1)
-    * RE.CCY = FIELD(DIFF.ID, "*", 2, 1)
-
     CO.CODE = FIELD(DFF.DATA<1>, "*", 1, 1)
     RE.CCY = FIELD(DFF.DATA<1>, "*", 2, 1)
 
@@ -334,8 +295,7 @@ PROCESS.DFF:
     R.DATA<EXT.RESERVED.20> =  DFF.DATA<6>  ;   *   CCY.CLOSE.BALANCE
     R.DATA<EXT.RESERVED.19> = DFF.DATA<7>   ;   *   LCY.CLOSE.BALANCE
 
-
-    GRP.ID = DIFF.ID
+    GRP.ID = DFF.DATA<1>
     GOSUB WRITE.DATA
 
     RETURN
