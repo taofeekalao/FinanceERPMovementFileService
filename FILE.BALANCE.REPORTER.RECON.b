@@ -94,19 +94,7 @@
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.FUTURE.1>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.FUTURE.2>
 
-            IF MOVEMENT.REC<EXT.ACCOUNT> NE '23227000' THEN
-                IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20> * -1	;	*	Negative CCY Balance Reported Without Sign
-                    INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.19> * -1	;	*	Negative LCY Balance Reported Without Sign
-                    INTERMEDIATE.REC<-1> = ""
-                END ELSE
-                    INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20>	;	*	CCY Balance
-                    INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.19>	;	*	LCY Balance
-                END
-            END ELSE
+            IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' OR MOVEMENT.REC<EXT.ACCOUNT> EQ '48312100' THEN
             * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
                 IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
                     INTERMEDIATE.REC<-1> = ""
@@ -118,6 +106,18 @@
                     INTERMEDIATE.REC<-1> = ""
                     INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.19>	;	*	LCY Balance
                     INTERMEDIATE.REC<-1> = ""
+                END
+            END ELSE
+                IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20> * -1	;	*	Negative CCY Balance Reported Without Sign
+                    INTERMEDIATE.REC<-1> = ""
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.19> * -1	;	*	Negative LCY Balance Reported Without Sign
+                    INTERMEDIATE.REC<-1> = ""
+                END ELSE
+                    INTERMEDIATE.REC<-1> = ""
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20>	;	*	CCY Balance
+                    INTERMEDIATE.REC<-1> = ""
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.19>	;	*	LCY Balance
                 END
             END
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.JRNL.BATCH.NAME>
