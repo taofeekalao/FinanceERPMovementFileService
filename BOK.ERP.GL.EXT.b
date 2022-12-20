@@ -15,6 +15,10 @@
 *	Modification To Change From Opening Balances To Closing Balances
 *	Added Calculation Of Difference / Imbalances To Balance Reporting
 *******************************************************************
+*	Meraki Systems
+*	December 19, 2022
+*   Introduced off and on balance sheet separation
+*******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
     SUBROUTINE BOK.ERP.GL.EXT(WORK.ID)
 
@@ -33,6 +37,8 @@
 
     DFF.DATA = ""
     PREV.ID = ""
+    BAL.SHT.IND = ""
+
     RE.DATE = R.DATES(EB.DAT.LAST.WORKING.DAY)
     FM.DATE = RE.DATE[1,4] : "/" : RE.DATE[5,2] : "/" : RE.DATE[7,2]
     LPERIOD = RE.DATE[5,2]
@@ -56,6 +62,11 @@
     LINE.DESC = R.LINE<RE.SRL.DESC,2,1>
     LINE.TYPE = R.LINE<RE.SRL.TYPE>
 
+    IF LINE.DESC[1,1] EQ "4" THEN
+        BAL.SHT.IND = "OFF"    ;   *   Off Balance Sheet Item
+    END ELSE
+        BAL.SHT.IND = "ON"      ;   *   On Balance Sheet Item
+    END
     *   PROCESS.RSLC
     *****************
     CO.CODE = FIELD(RSLC.ID, ".", 3, 1)
@@ -141,7 +152,7 @@ PROCESS.CAL:
     *   Processing Difference For Current CAL Key
     *********************************************
     DFF.DATA<1> = ""
-    DIFF.ID = CO.CODE : "*" : RE.CCY
+    DIFF.ID = CO.CODE : "*" : RE.CCY : "*" : BAL.SHT.IND
     CALL F.READU(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
     IF (R.ERP.GL.REC) THEN
         DFF.DATA<1> = DIFF.ID
@@ -240,7 +251,7 @@ PROCESS.CPL:
     *   Processing Difference For Current CPL Key
     *********************************************
     DFF.DATA<1> = ""
-    DIFF.ID = CO.CODE : "*" : RE.CCY
+    DIFF.ID = CO.CODE : "*" : RE.CCY  : "*" : BAL.SHT.IND
     CALL F.READU(FN.ERP.GL.TAB, DIFF.ID, R.ERP.GL.REC, F.ERP.GL.TAB, ERP.GL.ERR, "")
     IF (R.ERP.GL.REC) THEN
         DFF.DATA<1> = DIFF.ID
@@ -283,7 +294,15 @@ PROCESS.DFF:
     GOSUB GET.ERP.CODE
     R.DATA<EXT.BRANCH> = ERP.CODE
 
-    R.DATA<EXT.ACCOUNT> = "23227000"
+    *   Introduced off and on balance sheet separation
+    IF BAL.SHT.IND EQ "ON" THEN
+        R.DATA<EXT.ACCOUNT> = "23227000"    ;   *   On Balance Sheet Item
+    END
+
+    IF BAL.SHT.IND EQ "OFF" THEN
+        R.DATA<EXT.ACCOUNT> = "48312100"    ;   *   Off Balance Sheet Item
+    END
+    ***
     R.DATA<EXT.COST.CENTER> = "2105"
 
     R.DATA<EXT.CCY.DR.AMT> = DFF.DATA<4>    ;   *   DR.CCY.BALANCE
