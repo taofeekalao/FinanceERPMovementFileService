@@ -19,6 +19,13 @@
 *	December 19, 2022
 *   Introduced off and on balance sheet separation
 *******************************************************************
+*	Meraki Systems
+*	May 17, 2023
+*   Added Indicator to the lines to show if line item is either
+*   a P & L item or an A & L item using RESERVED.18 field
+*   PL for P & L
+*   AL for A & L
+*******************************************************************
     $PACKAGE BOK.ERP.GL.EXT
     SUBROUTINE BOK.ERP.GL.EXT(WORK.ID)
 
@@ -146,8 +153,9 @@ PROCESS.CAL:
 
         R.DATA<EXT.RESERVED.20> += CCY.BALANCE
         R.DATA<EXT.RESERVED.19> += LCY.BALANCE
-    END
 
+    END
+    R.DATA<EXT.RESERVED.18> = "AL"          ;   *   Consol Key Indicator A&L
     *   -----------------------------------------
     *   Processing Difference For Current CAL Key
     *********************************************
@@ -177,6 +185,7 @@ PROCESS.CAL:
         DFF.DATA<7> = LCY.BALANCE        ;   *   LCY Reporting
         ***
     END
+    DFF.DATA<8> = "AL"               ;   *   Consol Key Indicator A&L
     *   End Difference Processing
 
     GOSUB WRITE.DATA
@@ -246,6 +255,7 @@ PROCESS.CPL:
         R.DATA<EXT.RESERVED.20> += CCY.BALANCE
         R.DATA<EXT.RESERVED.19> += LCY.BALANCE
     END
+    R.DATA<EXT.RESERVED.18> = "PL"      ;   *   Consol Key Indicator P&L
 
     *   -----------------------------------------
     *   Processing Difference For Current CPL Key
@@ -276,6 +286,7 @@ PROCESS.CPL:
         DFF.DATA<7> = LCY.BALANCE        ;   *   LCY Reporting
         ***
     END
+    DFF.DATA<8> = "PL"                                               ;   *   Consol Key Indicator P&L
     *   End Difference Processing
 
     GOSUB WRITE.DATA
@@ -313,6 +324,7 @@ PROCESS.DFF:
 
     R.DATA<EXT.RESERVED.20> =  DFF.DATA<6>  ;   *   CCY.CLOSE.BALANCE
     R.DATA<EXT.RESERVED.19> = DFF.DATA<7>   ;   *   LCY.CLOSE.BALANCE
+    R.DATA<EXT.RESERVED.18> = DFF.DATA<8>   ;   *   Consol Key Indicator P&L Or A&L
 
     GRP.ID = DFF.DATA<1>
     GOSUB WRITE.DATA
@@ -375,7 +387,7 @@ WRITE.DATA:
         R.DATA<EXT.CCY.CR.AMT> = ''
     END
 
-    CALL F.WRITE(F.ERP.GL.TAB, GRP.ID, R.DATA)
+    CALL F.LIVE.WRITE(F.ERP.GL.TAB, GRP.ID, R.DATA)
     CALL JOURNAL.UPDATE("")
     CALL F.RELEASE(FN.ERP.GL.TAB, GRP.ID, F.ERP.GL.TAB)
 
