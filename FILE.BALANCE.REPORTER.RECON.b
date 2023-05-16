@@ -1,7 +1,7 @@
 	*---------------------------------------------------------------------
 	* Modification History :
 	*	taofeek alao
-	*	December 15, 2022
+	*	December 22, 2022
 	*	Meraki Systems
 	*	This is file transporter for balances reconciliation report.
 	*	Initial Dev
@@ -53,15 +53,22 @@
     FINAL.REC = ""
 
 	*	Set Headers
-    FINAL.REC<-1> = "Status Code,Ledger ID,Effective Date of Transaction,Period,Journal Source,Journal Category,Currency Code,Journal Entry Creation Date,Actual Flag,Company,CostCenter,Branches,Account,LoB,Intercompany,Sector of activities,Institutional sector,Future1,Future2,Entered Debit Amount,Entered Credit Amount,Converted Debit Amount,Converted Credit Amount,Refrence1_Batch_Name,Reference2_Batch_Description,Reference4_Journal Entry Name,Reference5_Journal Entry Description,Reference6_Journal Entry Reference,Reference7_Journal Entry Reversal,Reference8_Journal Entry Reversal Period,Reference9_Journal Entry Reversal Method,Reference10_Journal Entry Line Description,Statistical Amount,Currency Conversion Type,Currency Conversion Date, Interface Group Indentifier,Context field for Journal Entry Line DFF"
-
+    FINAL.REC<-1> = "Status Code,Ledger ID,Effective Date of Transaction,Journal Source,Journal Category,Currency Code,Journal Entry Creation Date,Actual Flag,Company,CostCenter,Branches,Account,LoB,Intercompany,Sector of activities,Institutional sector,Future1,Future2"
     COL.COUNT = 1
-    FOR CNT = 37 TO 56
-        FINAL.REC<-1> =  "Attribute":COL.COUNT: " Value for Journal Entry Line DFF"
+    FOR CNT = 19 TO 38
+        FINAL.REC<-1> = "Segment" : COL.COUNT
         COL.COUNT += 1
     NEXT CNT
 
-    FINAL.REC<-1> = "Context field for Captured Information DFF,Clearing Company,Ledger Name,Encumbrance Type ID,Reconciliation Reference"
+    FINAL.REC<-1> = "Entered Debit Amount,Entered Credit Amount,Converted Debit Amount,Converted Credit Amount,Journal_Batch_Name"
+
+    COL.COUNT = 1
+    FOR CNT = 44 TO 66
+        FINAL.REC<-1> =  "Interface" : COL.COUNT
+        COL.COUNT += 1
+    NEXT CNT
+
+    FINAL.REC<-1> = "Interface Group Identifier"
     CHANGE @AM TO FILE.SEP IN FINAL.REC
 
 ***********
@@ -75,11 +82,10 @@
         READ MOVEMENT.REC FROM F.ERP.GL.TAB, REC.ID THEN
             INTERMEDIATE.REC = ""
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.STATUS.CODE>
-            INTERMEDIATE.REC<-1> = "300000019612051"	;	*	MOVEMENT.REC<EXT.LEDGER.ID>
+            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LEDGER.ID>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EFF.DATE>
-            INTERMEDIATE.REC<-1> = ""	;	*	MOVEMENT.REC<>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.SOURCE>
-            INTERMEDIATE.REC<-1> = "Daily/Monthly Import GL"	;	 *	MOVEMENT.REC<EXT.CATEGORY>
+            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CATEGORY>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CURRENCY>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.BOOK.DATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.ACTUAL.FLAG>
@@ -93,6 +99,10 @@
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.INST.SECTOR>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.FUTURE.1>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.FUTURE.2>
+
+            FOR CNT = 19 TO 38
+                INTERMEDIATE.REC<-1> = ""
+            NEXT CNT
 
             IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' OR MOVEMENT.REC<EXT.ACCOUNT> EQ '48312100' THEN
             * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
@@ -122,19 +132,14 @@
             END
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.JRNL.BATCH.NAME>
 
-            FOR CNT = 24 TO 31
+            FOR CNT = 44 TO 63
                 INTERMEDIATE.REC<-1> =  ""
             NEXT CNT
 
-            INTERMEDIATE.REC<-1> = ""	;	*	Statistical Amount
+            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.USER>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE.DATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.INTRFCE.GRP.ID>
-            INTERMEDIATE.REC<-1> = ""	;	*	Context field for Journal Entry Line DFF
-
-            FOR CNT = 37 TO 61
-                INTERMEDIATE.REC<-1> =  ""
-            NEXT CNT
         END
         CHANGE @AM TO FILE.SEP IN INTERMEDIATE.REC
         FINAL.REC<-1> = INTERMEDIATE.REC

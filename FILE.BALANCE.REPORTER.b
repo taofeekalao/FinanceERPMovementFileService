@@ -27,15 +27,15 @@
     F.ERP.GL.TAB = ''
     CALL OPF(FN.ERP.GL.TAB, F.ERP.GL.TAB)
 
-    *   Parameter Table
-    FN.ERP.GL.PARAM = "F.BOK.ERP.GL.PARAMETER"
-    F.ERP.GL.PARAM = ""
-    CALL OPF(FN.ERP.GL.PARAM, F.ERP.GL.PARAM)
-
     *   Backup Directory   
     FN.BACKUP = 'ERP.GL.BACKUP'
     F.BACKUP = ''
     CALL OPF(FN.BACKUP, F.BACKUP)
+
+    *   Parameter Table
+    FN.ERP.GL.PARAM = "F.BOK.ERP.GL.PARAMETER"
+    F.ERP.GL.PARAM = ""
+    CALL OPF(FN.ERP.GL.PARAM, F.ERP.GL.PARAM)
 
     ERP.GL.PARAM.ID = "RW0010001"
     READ R.GL.PARAM FROM F.ERP.GL.PARAM, ERP.GL.PARAM.ID THEN
@@ -53,15 +53,22 @@
     FINAL.REC = ""
 
 	*	Set Headers
-    FINAL.REC<-1> = "Status Code,Ledger ID,Effective Date of Transaction,Period,Journal Source,Journal Category,Currency Code,Journal Entry Creation Date,Actual Flag,Company,CostCenter,Branches,Account,LoB,Intercompany,Sector of activities,Institutional sector,Future1,Future2,Entered Debit Amount,Entered Credit Amount,Converted Debit Amount,Converted Credit Amount,Refrence1_Batch_Name,Reference2_Batch_Description,Reference4_Journal Entry Name,Reference5_Journal Entry Description,Reference6_Journal Entry Reference,Reference7_Journal Entry Reversal,Reference8_Journal Entry Reversal Period,Reference9_Journal Entry Reversal Method,Reference10_Journal Entry Line Description,Statistical Amount,Currency Conversion Type,Currency Conversion Date, Interface Group Indentifier,Context field for Journal Entry Line DFF"
-
+    FINAL.REC<-1> = "Status Code,Ledger ID,Effective Date of Transaction,Journal Source,Journal Category,Currency Code,Journal Entry Creation Date,Actual Flag,Company,CostCenter,Branches,Account,LoB,Intercompany,Sector of activities,Institutional sector,Future1,Future2"
     COL.COUNT = 1
-    FOR CNT = 37 TO 56
-        FINAL.REC<-1> =  "Attribute":COL.COUNT: " Value for Journal Entry Line DFF"
+    FOR CNT = 19 TO 38
+        FINAL.REC<-1> = "Segment" : COL.COUNT
         COL.COUNT += 1
     NEXT CNT
 
-    FINAL.REC<-1> = "Context field for Captured Information DFF,Clearing Company,Ledger Name,Encumbrance Type ID,Reconciliation Reference"
+    FINAL.REC<-1> = "Entered Debit Amount,Entered Credit Amount,Converted Debit Amount,Converted Credit Amount,Journal_Batch_Name"
+
+    COL.COUNT = 1
+    FOR CNT = 44 TO 66
+        FINAL.REC<-1> =  "Interface" : COL.COUNT
+        COL.COUNT += 1
+    NEXT CNT
+
+    FINAL.REC<-1> = "Interface Group Identifier"
     CHANGE @AM TO FILE.SEP IN FINAL.REC
 
 ***********
@@ -75,11 +82,10 @@
         READ MOVEMENT.REC FROM F.ERP.GL.TAB, REC.ID THEN
             INTERMEDIATE.REC = ""
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.STATUS.CODE>
-            INTERMEDIATE.REC<-1> = "300000019612051"	                    ;	*	MOVEMENT.REC<EXT.LEDGER.ID>
+            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LEDGER.ID>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EFF.DATE>
-            INTERMEDIATE.REC<-1> = ""	                                    ;	*	MOVEMENT.REC<>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.SOURCE>
-            INTERMEDIATE.REC<-1> = "Daily/Monthly Import GL"	            ;	 *	MOVEMENT.REC<EXT.CATEGORY>
+            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CATEGORY>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CURRENCY>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.BOOK.DATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.ACTUAL.FLAG>
@@ -94,55 +100,40 @@
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.FUTURE.1>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.FUTURE.2>
 
-            ********************************
-            ***     ~ CCY For AL, LCY For PL
-            ***     Checking If Line Is PL Or AL.
-            ***     PL Lines Are Reported In LCYs While AL Lines Are Reported In CCYs
-            ***     The Swapping Between LCY Values And CCY Values For Reporting Happens Here
-            ***     LCYs Are In MOVEMENT.REC<EXT.RESERVED.19> While CCYs Are In MOVEMENT.REC<EXT.RESERVED.20>
-            ***     MOVEMENT.REC<EXT.RESERVED.18> Stores Either PL Or AL Flag For All Lines In The ERP GL Table
-            ***************************************************************************************************
-            IF MOVEMENT.REC<EXT.RESERVED.18> EQ "PL" THEN
-                ERP.GL.VAL = MOVEMENT.REC<EXT.RESERVED.19>      ;   * LCY Equivalent Of The Transaction Values
-            END ELSE
-                ERP.GL.VAL = MOVEMENT.REC<EXT.RESERVED.20>      ;   * CCY Equivalent Of The Transaction Values
-            END
+            FOR CNT = 19 TO 38
+                INTERMEDIATE.REC<-1> = ""
+            NEXT CNT
 
             IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' OR MOVEMENT.REC<EXT.ACCOUNT> EQ '48312100' THEN
-                * Swapped Reporting Columns For Credit And Debit So The Balances Can Net Off
-                IF ERP.GL.VAL LT 0 THEN
+                * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
+                IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
                     INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = ERP.GL.VAL * -1	;	*	Negative Balance Reported Without Sign ~ CCY For AL, LCY For PL
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20> * -1	;	*	Negative CCY Balance Reported Without Sign
                 END ELSE
-                    INTERMEDIATE.REC<-1> = ERP.GL.VAL	    ;	*	Balance ~ CCY For AL, LCY For PL
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20>	;	*	CCY Balance
                     INTERMEDIATE.REC<-1> = ""
                 END
             END ELSE
-                IF ERP.GL.VAL LT 0 THEN
-                    INTERMEDIATE.REC<-1> = ERP.GL.VAL * -1	;	*	Negative Balance Reported Without Sign  ~ CCY For AL, LCY For PL
+                IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20> * -1	;	*	Negative CCY Balance Reported Without Sign
                     INTERMEDIATE.REC<-1> = ""
                 END ELSE
                     INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = ERP.GL.VAL	    ;	*	Balance ~ CCY For AL, LCY For PL
+                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20>	;	*	CCY Balance
                 END
             END
             INTERMEDIATE.REC<-1> = ""
             INTERMEDIATE.REC<-1> = ""
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.JRNL.BATCH.NAME>
 
-            FOR CNT = 24 TO 31
+            FOR CNT = 44 TO 63
                 INTERMEDIATE.REC<-1> =  ""
             NEXT CNT
 
-            INTERMEDIATE.REC<-1> = ""	                                        ;	*	Statistical Amount
+            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.USER>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE.DATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.INTRFCE.GRP.ID>
-            INTERMEDIATE.REC<-1> = ""	                                        ;	*	Context field for Journal Entry Line DFF
-
-            FOR CNT = 37 TO 61
-                INTERMEDIATE.REC<-1> =  ""
-            NEXT CNT
         END
         CHANGE @AM TO FILE.SEP IN INTERMEDIATE.REC
         FINAL.REC<-1> = INTERMEDIATE.REC
