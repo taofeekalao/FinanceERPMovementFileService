@@ -49,7 +49,7 @@
     F.EXCHANGE = ''
     CALL OPF(FN.EXCHANGE, F.EXCHANGE)
 
-    FILE.NAME = FILE.NAME:"_":"Balance":"_":"Recon":"_":RE.DATE:".csv"
+    FILE.NAME = FILE.NAME:"_":"Recon":"_":RE.DATE:".csv"
     FINAL.REC = ""
 
 	*	Set Headers
