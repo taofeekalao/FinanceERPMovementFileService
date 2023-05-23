@@ -1,4 +1,4 @@
-	*---------------------------------------------------------------------
+    +	*---------------------------------------------------------------------
 	* Modification History :
 	*	taofeek alao
 	*	December 03, 2022
@@ -80,13 +80,32 @@
         REMOVE REC.ID FROM SEL.LIST SETTING NXT.ID
     WHILE (REC.ID : NXT.ID) DO
         READ MOVEMENT.REC FROM F.ERP.GL.TAB, REC.ID THEN
+            ********************************
+            ***     ~ CCY For AL, LCY For PL
+            ***     Checking If Line Is PL Or AL.
+            ***     PL Lines Are Reported In LCYs While AL Lines Are Reported In CCYs
+            ***     The Swapping Between LCY Values And CCY Values For Reporting Happens Here
+            ***     LCYs Are In MOVEMENT.REC<EXT.RESERVED.19> While CCYs Are In MOVEMENT.REC<EXT.RESERVED.20>
+            ***     MOVEMENT.REC<EXT.RESERVED.18> Stores Either PL Or AL Flag For All Lines In The ERP GL Table
+            ***************************************************************************************************
+            IF MOVEMENT.REC<EXT.RESERVED.18> EQ "PL" THEN
+                ERP.GL.VAL = MOVEMENT.REC<EXT.RESERVED.19>      ;   * LCY Equivalent Of The Transaction Values
+                CURRENCY = "RWF"                                ;   * LCY Currency Defaulted
+                EXCHANGE.RATE = "1"                             ;   * Exchange Rate For LCY Currency Defaulted To "1"
+            END ELSE
+                ERP.GL.VAL = MOVEMENT.REC<EXT.RESERVED.20>      ;   * CCY Equivalent Of The Transaction Values
+                CURRENCY = MOVEMENT.REC<EXT.CURRENCY>           ;   * Respective Transaction Currency
+                EXCHANGE.RATE = MOVEMENT.REC<EXT.EXCH.RATE>     ;   * Respective Transaction Exchange Rate
+            END
+
+
             INTERMEDIATE.REC = ""
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.STATUS.CODE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.LEDGER.ID>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EFF.DATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.SOURCE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CATEGORY>
-            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.CURRENCY>
+            INTERMEDIATE.REC<-1> = CURRENCY
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.BOOK.DATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.ACTUAL.FLAG>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.COMPANY>
@@ -108,18 +127,18 @@
                 * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
                 IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
                     INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20> * -1	;	*	Negative CCY Balance Reported Without Sign
+                    INTERMEDIATE.REC<-1> = ERP.GL.VAL * -1	;	*	Negative CCY Balance Reported Without Sign
                 END ELSE
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20>	;	*	CCY Balance
+                    INTERMEDIATE.REC<-1> = ERP.GL.VAL	;	*	CCY Balance
                     INTERMEDIATE.REC<-1> = ""
                 END
             END ELSE
                 IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20> * -1	;	*	Negative CCY Balance Reported Without Sign
+                    INTERMEDIATE.REC<-1> = ERP.GL.VAL * -1	;	*	Negative CCY Balance Reported Without Sign
                     INTERMEDIATE.REC<-1> = ""
                 END ELSE
                     INTERMEDIATE.REC<-1> = ""
-                    INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.RESERVED.20>	;	*	CCY Balance
+                    INTERMEDIATE.REC<-1> = ERP.GL.VAL	;	*	CCY Balance
                 END
             END
             INTERMEDIATE.REC<-1> = ""
@@ -132,7 +151,7 @@
 
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.USER>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE.DATE>
-            INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE>
+            INTERMEDIATE.REC<-1> = EXCHANGE.RATE
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.INTRFCE.GRP.ID>
         END
         CHANGE @AM TO FILE.SEP IN INTERMEDIATE.REC
