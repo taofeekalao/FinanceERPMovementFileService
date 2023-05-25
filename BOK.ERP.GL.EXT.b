@@ -41,6 +41,7 @@
     $INSERT I_F.ERP.GL
     $INSERT I_BATCH.FILES
     $INSERT I_BOK.ERP.GL.EXT
+    $INSERT I_F.BATCH
 
     DFF.DATA = ""
     PREV.ID = ""
@@ -156,6 +157,13 @@ PROCESS.CAL:
 
     END
     R.DATA<EXT.RESERVED.18> = "AL"          ;   *   Consol Key Indicator A&L
+
+    *   Introduced Report Checker For Each Section
+    *   
+    CHECKER.RECORD = CO.CODE:"|":RE.CCY:"|":LINE.DESC:"|":RE.KEY:"|":CCY.BALANCE:"|":LCY.BALANCE:"|":"AL":"|":WORK.ID:"|":GRP.ID
+    WRITESEQF CHECKER.RECORD TO REPORT.CHECKER.PATH ELSE CHECKER.RECORD = ""
+    *   
+
     *   -----------------------------------------
     *   Processing Difference For Current CAL Key
     *********************************************
@@ -256,6 +264,11 @@ PROCESS.CPL:
         R.DATA<EXT.RESERVED.19> += LCY.BALANCE
     END
     R.DATA<EXT.RESERVED.18> = "PL"      ;   *   Consol Key Indicator P&L
+
+    *   Introduced Report Checker For Each Section
+    *   
+    CHECKER.RECORD = CO.CODE:"|":RE.CCY:"|":LINE.DESC:"|":RE.KEY:"|":CCY.BALANCE:"|":LCY.BALANCE:"|":"PL":"|":WORK.ID:"|":GRP.ID
+    WRITESEQF CHECKER.RECORD TO REPORT.CHECKER.PATH ELSE CHECKER.RECORD = ""
 
     *   -----------------------------------------
     *   Processing Difference For Current CPL Key
