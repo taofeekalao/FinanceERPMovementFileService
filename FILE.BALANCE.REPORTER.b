@@ -125,6 +125,9 @@
 
             IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' OR MOVEMENT.REC<EXT.ACCOUNT> EQ '48312100' THEN
                 * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
+                IF MOVEMENT.REC<EXT.RESERVED.18> EQ "PL" AND MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' AND CURRENCY NE LCCY THEN
+                    ERP.GL.VAL = 0                      ;   * LCY Equivalent Of The Transaction Values
+                END
                 IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
                     INTERMEDIATE.REC<-1> = ""
                     INTERMEDIATE.REC<-1> = ERP.GL.VAL * -1	;	*	Negative CCY Balance Reported Without Sign
