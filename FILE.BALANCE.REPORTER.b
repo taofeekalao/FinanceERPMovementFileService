@@ -124,9 +124,12 @@
             NEXT CNT
 
             IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' OR MOVEMENT.REC<EXT.ACCOUNT> EQ '48312100' THEN
-                * Suspended Reporting of Difference on Line 23227000 for All Entries For Foreign Currencies
-                IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' AND CURRENCY NE LCCY THEN
-                    ERP.GL.VAL = 0                      ;   * LCY Equivalent Of The Transaction Values
+                *   Essentially, The Mechanism Adopted By The Bank In Their RS - Requirement Specification
+                *    Is To Force Balance The File By Posting Reversal of Sum of All Credit And Sum of All Debit Entries
+
+                *   Suspended Reporting of Difference on Line 23227000 for All Entries For All Currencies
+                IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' THEN
+                    ERP.GL.VAL = 0                      ;   * Respective Value (Local or Foreign) Depending on Either P&L or A&L
                 END
 
                 * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
