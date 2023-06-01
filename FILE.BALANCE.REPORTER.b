@@ -127,12 +127,7 @@
                 *   Essentially, The Mechanism Adopted By The Bank In Their RS - Requirement Specification
                 *    Is To Force Balance The File By Posting Reversal of Sum of All Credit And Sum of All Debit Entries
 
-                *   Suspended Reporting of Difference on Line 23227000 for All Entries For All Currencies
-                IF MOVEMENT.REC<EXT.ACCOUNT> EQ '23227000' THEN
-                    ERP.GL.VAL = 0                      ;   * Respective Value (Local or Foreign) Depending on Either P&L or A&L
-                END
-
-                * Swapped Reporting Columns For Credit And Debit So Balance Can Net Off
+                * Swapped Reporting Columns For Credit And Debit So Balances Can Net Off
                 IF MOVEMENT.REC<EXT.RESERVED.20> LT 0 THEN
                     INTERMEDIATE.REC<-1> = ""
                     INTERMEDIATE.REC<-1> = ERP.GL.VAL * -1	;	*	Negative CCY Balance Reported Without Sign
@@ -159,7 +154,7 @@
 
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.USER>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.EXCH.RATE.DATE>
-            INTERMEDIATE.REC<-1> = EXCHANGE.RATE
+            INTERMEDIATE.REC<-1> = EXCHANGE.RATE            ;   *   MOVEMENT.REC<EXT.EXCH.RATE>
             INTERMEDIATE.REC<-1> = MOVEMENT.REC<EXT.INTRFCE.GRP.ID>
         END
         CHANGE @AM TO FILE.SEP IN INTERMEDIATE.REC
